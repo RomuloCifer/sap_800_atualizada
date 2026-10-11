@@ -1,6 +1,6 @@
 # Estado do projeto (atualizado)
 
-Última atualização relevante: Mapear executa o fluxo (F6…) e pausa só nos cliques; contagem 3s em Iniciar/Mapear.
+Última atualização relevante: Excel documentado — Batch (D), Issuer Id (R), Total Value (T); sem lógica ainda.
 
 ## Organização
 
@@ -19,8 +19,11 @@ sap_800_att/
     runner.py              # executa uma parte
     win_mouse.py           # mouse Win32
   .scratch/                # norte + decisões (não é código)
+  fixtures/exemplo_nfe.xml # XML de exemplo para o parser
   excel/                   # planilhas locais
 ```
+
+Excel (doc): [excel-colunas.md](excel-colunas.md) — Batch **D**, Issuer Id **R**, Total Value **T**.
 
 ## Regras importantes
 

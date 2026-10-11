@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe>
+    <infNFe Id="NFe35251150119668000120550040000033191140033194" versao="4.00">
+      <ide>
+        <cUF>35</cUF>
+        <cNF>14003319</cNF>
+        <natOp>Retorno de mercadoria depositada em deposito fechado ou arma</natOp>
+        <mod>55</mod>
+        <serie>4</serie>
+        <nNF>3319</nNF>
+        <dhEmi>2025-11-13T14:09:00-03:00</dhEmi>
+        <dhSaiEnt>2025-11-13T14:09:00-03:00</dhSaiEnt>
+        <tpNF>1</tpNF>
+        <idDest>1</idDest>
+        <cMunFG>3523404</cMunFG>
+        <tpImp>1</tpImp>
+        <tpEmis>1</tpEmis>
+        <cDV>4</cDV>
+        <tpAmb>1</tpAmb>
+        <finNFe>1</finNFe>
+        <indFinal>0</indFinal>
+        <indPres>9</indPres>
+        <procEmi>0</procEmi>
+        <verProc>3.0.8.6</verProc>
+      </ide>
+      <emit>
+        <CNPJ>50119668000120</CNPJ>
+        <xNome>EMPRESA DE TRANSPORTES ITATIBENSE LTDA</xNome>
+        <xFant>MATRIZ - ITATIBA</xFant>
+        <enderEmit>
+          <xLgr>ROD. DOM PEDRO, KM 102</xLgr>
+          <nro>0</nro>
+          <xBairro>PONTE NOVA</xBairro>
+          <cMun>3523404</cMun>
+          <xMun>ITATIBA</xMun>
+          <UF>SP</UF>
+          <CEP>13252320</CEP>
+          <cPais>1058</cPais>
+          <xPais>Brasil</xPais>
+          <fone>01145349200</fone>
+        </enderEmit>
+        <IE>382000944118</IE>
+        <CRT>3</CRT>
+      </emit>
+      <dest>
+        <CNPJ>00907845001560</CNPJ>
+        <xNome>TE CONNECTIVITY BRASIL INDUSTRIA DE ELETRONICOS LTDA</xNome>
+        <enderDest>
+          <xLgr>AMPERE</xLgr>
+          <nro>304</nro>
+          <xBairro>PENHA</xBairro>
+          <cMun>3507605</cMun>
+          <xMun>BRAGANCA PAULISTA</xMun>
+          <UF>SP</UF>
+          <CEP>12929570</CEP>
+          <cPais>1058</cPais>
+          <xPais>Brasil</xPais>
+          <fone>01134046000</fone>
+        </enderDest>
+        <indIEDest>1</indIEDest>
+        <IE>225027206111</IE>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>1-881804-8</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>CAIXA DE PAPELAO ONDULADO</xProd>
+          <NCM>48191000</NCM>
+          <CFOP>5906</CFOP>
+          <uCom>PC</uCom>
+          <qCom>436.0000</qCom>
+          <vUnCom>3.5100000000</vUnCom>
+          <vProd>1530.36</vProd>
+          <uTrib>PC</uTrib>
+          <qTrib>436.0000</qTrib>
+          <vUnTrib>3.5100000000</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+      </det>
+      <det nItem="2">
+        <prod>
+          <cProd>BR85444900</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>CONDUTOR ELETRICO SEM PECAS DE CONEXAO</xProd>
+          <NCM>85444900</NCM>
+          <CFOP>5906</CFOP>
+          <uCom>M</uCom>
+          <qCom>10.0000</qCom>
+          <vUnCom>10.0000000000</vUnCom>
+          <vProd>100.00</vProd>
+          <uTrib>M</uTrib>
+          <qTrib>10.0000</qTrib>
+          <vUnTrib>10.0000000000</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+      </det>
+      <det nItem="3">
+        <prod>
+          <cProd>BR85444200</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>COND. ELETRICO C/ CONECT. P/ TEN.INF.1KV</xProd>
+          <NCM>85444200</NCM>
+          <CFOP>5906</CFOP>
+          <uCom>M</uCom>
+          <qCom>20.0000</qCom>
+          <vUnCom>5.0000000000</vUnCom>
+          <vProd>100.00</vProd>
+          <uTrib>M</uTrib>
+          <qTrib>20.0000</qTrib>
+          <vUnTrib>5.0000000000</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+      </det>
+      <total>
+        <ICMSTot>
+          <vBC>0.00</vBC>
+          <vICMS>0.00</vICMS>
+          <vProd>1730.36</vProd>
+          <vNF>1730.36</vNF>
+          <vPIS>0.00</vPIS>
+          <vCOFINS>0.00</vCOFINS>
+        </ICMSTot>
+      </total>
+    </infNFe>
+  </NFe>
+  <protNFe versao="4.00">
+    <infProt>
+      <tpAmb>1</tpAmb>
+      <verAplic>SP_NFE_PL009_V4</verAplic>
+      <chNFe>35251150119668000120550040000033191140033194</chNFe>
+      <dhRecbto>2025-11-13T14:09:16-03:00</dhRecbto>
+      <nProt>135253475578265</nProt>
+      <digVal>4eahuLthn3ZpiOUMzfQ96lVK2Ro=</digVal>
+      <cStat>100</cStat>
+      <xMotivo>Autorizado o uso da NF-e</xMotivo>
+    </infProt>
+  </protNFe>
+</nfeProc>
