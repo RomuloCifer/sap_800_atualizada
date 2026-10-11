@@ -1,0 +1,12 @@
+{
+  "versao": 1,
+  "descricao": "Catálogo de passos por parte. Só nomes/ids — sem coordenadas. XY fica em pontos_local.json (local).",
+  "partes": {
+    "abrir_batch": {
+      "passos": []
+    },
+    "pegar_xml": {
+      "passos": []
+    }
+  }
+}

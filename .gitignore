@@ -1,0 +1,23 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.env
+.idea/
+.vscode/
+
+# Coordenadas desta máquina — NÃO versionar
+pontos_local.json
+tools/coordenadas.txt
+
+# Planilhas locais
+*.xlsx
+*.XLSX
+*.xls
+*.XLS
+
+runs/
