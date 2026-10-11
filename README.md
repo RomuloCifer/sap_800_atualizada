@@ -9,8 +9,8 @@ Dois cliques em `iniciar.bat`
 
 Na tela:
 
-- **Iniciar automação** — espera **5s** (contagem na tela) para você focar o SAP, depois roda a parte
-- **Mapear** — só passos com XY; **grave com o botão do meio** (apertar a roda). Esc cancela
+- **Iniciar automação** — espera **3s** para focar o SAP, depois roda a parte
+- **Mapear** — também espera **3s**, **roda o fluxo** (F6, etc.) e só pausa nos cliques; grave com o **botão do meio** (roda). Esc cancela
 
 ## Arquivos importantes
 

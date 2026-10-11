@@ -1,6 +1,6 @@
 # Estado do projeto (atualizado)
 
-Última atualização relevante: batch de novo via `paste` (Ctrl+V); texto da tela até ter Excel.
+Última atualização relevante: Mapear executa o fluxo (F6…) e pausa só nos cliques; contagem 3s em Iniciar/Mapear.
 
 ## Organização
 
@@ -28,9 +28,10 @@ sap_800_att/
 2. **Passos diferentes do `sap_800`** — não copiar sequência de lá.
 3. **Mapear só pede clique** — kinds `keys` / `hotkey` / `paste` / `user_action` não pedem coordenada.
 4. **Gravar XY = botão do meio** (apertar a roda). Esc cancela. Captura via Win32 (`GetAsyncKeyState`).
-5. **Antes de Iniciar** — espera 5s com contagem na tela para focar o SAP (senão F3/etc. caem na janela errada).
-6. **Na execução** — teclas e paste rodam sem aviso; `user_action` pausa e pede o usuário (ex.: clicar no XML).
-7. Ao mudar algo estrutural (kinds, partes, contrato dos arquivos), **atualizar este scratch**.
+5. **Antes de Iniciar e Mapear** — contagem de **3s** para focar o SAP.
+6. **Mapear** — executa a parte em ordem (teclas/hotkeys/paste); só pausa nos `click` sem XY (ou remapear). Depois grava e clica para o fluxo seguir.
+7. **Na execução** — teclas e paste rodam sem aviso; `user_action` pausa e pede o usuário.
+8. Ao mudar algo estrutural (kinds, partes, contrato dos arquivos), **atualizar este scratch**.
 
 ## Kinds
 

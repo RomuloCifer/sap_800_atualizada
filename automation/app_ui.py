@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import Optional
@@ -12,8 +13,8 @@ from automation import mapa as catalog
 from automation import runner
 from automation import win_mouse
 
-# Tempo para focar a tela do SAP antes da 1ª tecla/clique.
-DELAY_INICIO_SEGUNDOS = 5
+# Tempo para focar a tela do SAP antes da 1ª tecla/clique (Iniciar e Mapear).
+DELAY_FOCO_SAP_SEGUNDOS = 3
 
 
 class App(tk.Tk):
@@ -96,7 +97,9 @@ class App(tk.Tk):
 
         self.status = tk.Label(
             self,
-            text="Pronto.",
+            text="Pronto. Contagem de {}s antes de Iniciar/Mapear.".format(
+                DELAY_FOCO_SAP_SEGUNDOS
+            ),
             font=("Segoe UI", 9),
             fg="#333333",
             bg="#f4f4f4",
@@ -153,12 +156,37 @@ class App(tk.Tk):
         self.btn_mapear.config(state=state)
         if msg is not None:
             self.status.config(text=msg)
+
     def _parte_selecionada(self):
         # type: () -> str
         nome = (self.parte_var.get() or "").strip()
         if not nome:
             raise RuntimeError("Selecione uma parte.")
         return nome
+
+    def _parte_precisa_texto(self, parte):
+        # type: (str) -> bool
+        try:
+            passos = catalog.passos_da_parte(parte)
+        except Exception:
+            return False
+        return any(str(p.get("kind") or "") in ("paste", "click_and_type") for p in passos)
+
+    def _countdown_foco_sap(self, contexto):
+        # type: (str) -> bool
+        """
+        Contagem na UI (thread principal). Retorna False se cancelado.
+        """
+        for resto in range(DELAY_FOCO_SAP_SEGUNDOS, 0, -1):
+            if self._cancel_run:
+                self._set_busy(False, "Cancelado.")
+                return False
+            self.status.config(
+                text="[{}] Foque o SAP! Começa em {}s…".format(contexto, resto)
+            )
+            self.update()
+            time.sleep(1)
+        return True
 
     def _on_mapear(self):
         # type: () -> None
@@ -170,26 +198,39 @@ class App(tk.Tk):
             messagebox.showerror("Mapear", str(exc))
             return
 
+        texto = (self.texto_var.get() or "").strip()
+        if self._parte_precisa_texto(parte) and not texto:
+            messagebox.showerror(
+                "Mapear",
+                "Preencha o Batch / texto: o Mapear também roda o fluxo "
+                "(inclui colar o batch).",
+            )
+            self.entry_texto.focus_set()
+            return
+
         remapear = bool(self.remapear_var.get())
-        # Mapear roda na thread da UI (janelas Tk do capturador).
-        self._set_busy(True, "Mapeando '{}'…".format(parte))
+        self._cancel_run = False
+        self._set_busy(True, "Mapear '{}'…".format(parte))
+        self.update_idletasks()
+
+        if not self._countdown_foco_sap("Mapear"):
+            return
+
+        self.status.config(text="Mapeando '{}': rodando passos…".format(parte))
         self.update_idletasks()
         try:
-            gravados, total = localmap.mapear_parte(parte, remapear_tudo=remapear)
-            msg = "Mapear ok: {} novo(s) / {} passo(s) em '{}'.".format(
-                gravados, total, parte
+            gravados, total = localmap.mapear_parte(
+                parte,
+                remapear_tudo=remapear,
+                texto=texto if texto else None,
             )
+            msg = (
+                "Mapear ok: {} novo(s) / {} clique(s) em '{}'.\n"
+                "(Teclas do fluxo foram executadas durante o mapeamento.)"
+            ).format(gravados, total, parte)
             self._fim_ok(msg)
         except Exception as exc:
             self._fim_erro("Mapear", str(exc))
-
-    def _parte_precisa_texto(self, parte):
-        # type: (str) -> bool
-        try:
-            passos = catalog.passos_da_parte(parte)
-        except Exception:
-            return False
-        return any(str(p.get("kind") or "") in ("paste", "click_and_type") for p in passos)
 
     def _on_iniciar(self):
         # type: () -> None
@@ -214,28 +255,28 @@ class App(tk.Tk):
         self._cancel_run = False
         self._set_busy(
             True,
-            "Foque o SAP! Começa em {}s…".format(DELAY_INICIO_SEGUNDOS),
+            "Foque o SAP! Começa em {}s…".format(DELAY_FOCO_SAP_SEGUNDOS),
         )
 
         def trabalho():
             try:
-                import time
-
-                for resto in range(DELAY_INICIO_SEGUNDOS, 0, -1):
+                for resto in range(DELAY_FOCO_SAP_SEGUNDOS, 0, -1):
                     if self._cancel_run:
                         self.after(0, lambda: self._set_busy(False, "Cancelado."))
                         return
                     self.after(
                         0,
                         lambda r=resto: self.status.config(
-                            text="Foque o SAP! Começa em {}s…".format(r)
+                            text="[Iniciar] Foque o SAP! Começa em {}s…".format(r)
                         ),
                     )
                     time.sleep(1)
                 if self._cancel_run:
                     self.after(0, lambda: self._set_busy(False, "Cancelado."))
                     return
-                self.after(0, lambda: self.status.config(text="Rodando '{}'…".format(parte)))
+                self.after(
+                    0, lambda: self.status.config(text="Rodando '{}'…".format(parte))
+                )
                 n = runner.executar_parte(parte, texto=texto if texto else None)
                 msg = "Concluído: {} passo(s) em '{}'.".format(n, parte)
                 self.after(0, lambda: self._fim_ok(msg))

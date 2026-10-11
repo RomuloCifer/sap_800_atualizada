@@ -176,13 +176,17 @@ def _pedir_ponto(passo, indice, total):
     return int(xy[0]), int(xy[1])
 
 
-def mapear_parte(nome_parte, remapear_tudo=False):
-    # type: (str, bool) -> Tuple[int, int]
+def mapear_parte(nome_parte, remapear_tudo=False, texto=None, pausa_entre=0.35):
+    # type: (str, bool, Optional[str], float) -> Tuple[int, int]
     """
-    Mapeia só passos que precisam de XY (click / click_and_type).
-    Teclas, paste e user_action são ignorados no Mapear.
+    Roda a parte em ordem (F6, Ctrl+F6, etc.) e só pausa nos cliques
+    que ainda precisam de XY (botão do meio). Depois do clique gravado,
+    executa o clique para o fluxo continuar.
     Retorna (gravados_agora, total_que_precisam_xy).
     """
+    # Import tardio evita ciclo localmap <-> runner.
+    from automation import runner
+
     todos = catalog.passos_da_parte(nome_parte)
     if not todos:
         raise RuntimeError(
@@ -192,8 +196,8 @@ def mapear_parte(nome_parte, remapear_tudo=False):
     for passo in todos:
         catalog.validar_passo(passo)
 
-    passos = catalog.passos_com_xy(nome_parte)
-    if not passos:
+    com_xy = catalog.passos_com_xy(nome_parte)
+    if not com_xy:
         raise RuntimeError(
             "A parte '{}' não tem passos com clique para mapear "
             "(só teclas/ações automáticas ou do usuário).".format(nome_parte)
@@ -201,24 +205,39 @@ def mapear_parte(nome_parte, remapear_tudo=False):
 
     pontos = load_pontos()
     if remapear_tudo:
-        for passo in passos:
+        for passo in com_xy:
             pontos.pop(str(passo["id"]), None)
 
+    total_xy = len(com_xy)
+    indice_xy = 0
     gravados = 0
-    total = len(passos)
-    for i, passo in enumerate(passos, start=1):
-        pid = str(passo["id"])
-        if pid in pontos and "x" in pontos[pid] and "y" in pontos[pid]:
-            continue
-        xy = _pedir_ponto(passo, i, total)
-        if xy is None:
-            save_pontos(pontos)
-            raise RuntimeError("Mapeamento cancelado em '{}'.".format(pid))
-        pontos[pid] = {"x": xy[0], "y": xy[1]}
-        gravados += 1
-        save_pontos(pontos)
 
-    return gravados, total
+    win_mouse.ensure_dpi_awareness()
+
+    for passo in todos:
+        kind = str(passo.get("kind") or "")
+        pid = str(passo["id"])
+
+        if kinds.precisa_xy(kind):
+            indice_xy += 1
+            tem = pid in pontos and "x" in pontos[pid] and "y" in pontos[pid]
+            if not tem:
+                xy = _pedir_ponto(passo, indice_xy, total_xy)
+                if xy is None:
+                    save_pontos(pontos)
+                    raise RuntimeError("Mapeamento cancelado em '{}'.".format(pid))
+                pontos[pid] = {"x": xy[0], "y": xy[1]}
+                gravados += 1
+                save_pontos(pontos)
+
+            # Executa o clique (novo ou já existente) para seguir o fluxo no SAP.
+            runner.executar_passo(passo, texto=texto, pontos=pontos)
+        else:
+            runner.executar_passo(passo, texto=texto, pontos=pontos)
+
+        time.sleep(runner.pausa_depois_do_passo(passo, pausa_entre))
+
+    return gravados, total_xy
 
 
 def ids_faltando(nome_parte):

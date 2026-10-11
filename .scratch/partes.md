@@ -20,10 +20,10 @@ Pontos a mapear nesta máquina: `clique_antes_batch`, `clique_relogio`, `clique_
 ## PEGAR XML (`pegar_xml`)
 
 1. Tecla **F6** → `keys` (auto)
-2. **Ctrl+F6** abrir XML → `hotkey` (auto)
-3. **Clique do usuário** na informação do XML → `user_action` (pede OK)
+2. **Ctrl+F6** abrir XML → `hotkey` + `pausa_depois: 1.0`
+3. **1 clique** na informação do XML → `click` + `pausa_depois: 0.5` (**mapear**)
 4. **Ctrl+A** selecionar tudo → `hotkey` (auto)
 5. **Ctrl+C** copiar → `hotkey` (auto)
 6. Tecla **F3** voltar → `keys` (auto)
 
-Nenhum XY para mapear nesta parte (só ação do usuário no meio).
+Ponto a mapear: `pegar_xml.clique_info_xml`.

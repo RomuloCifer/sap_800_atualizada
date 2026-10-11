@@ -76,15 +76,17 @@
           "ordem": 2,
           "kind": "hotkey",
           "keys": ["ctrl", "f6"],
+          "pausa_depois": 1.0,
           "nome": "abrir XML",
-          "obs": "Ctrl+F6 para abrir o XML"
+          "obs": "Ctrl+F6 para abrir o XML; espera 1s"
         },
         {
-          "id": "pegar_xml.clique_usuario_xml",
+          "id": "pegar_xml.clique_info_xml",
           "ordem": 3,
-          "kind": "user_action",
-          "nome": "clique do usuário no XML",
-          "obs": "Clique na informação do XML e depois confirme OK nesta janela"
+          "kind": "click",
+          "pausa_depois": 0.5,
+          "nome": "informação do XML",
+          "obs": "1 clique na informação do XML (foco antes do Ctrl+A)"
         },
         {
           "id": "pegar_xml.selecionar_tudo",
@@ -94,6 +96,7 @@
           "nome": "selecionar tudo",
           "obs": "Ctrl+A para selecionar toda a informação do XML"
         },
+
         {
           "id": "pegar_xml.copiar",
           "ordem": 5,

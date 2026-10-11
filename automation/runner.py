@@ -56,12 +56,19 @@ def _pausa_do_passo(passo, padrao):
     return float(passo["pausa"])
 
 
-def _pausa_depois_do_passo(passo, padrao):
+def pausa_depois_do_passo(passo, padrao=0.35):
     # type: (dict, float) -> float
     """pausa_depois = espera após o passo, antes do próximo."""
     if "pausa_depois" not in passo or passo.get("pausa_depois") is None:
         return float(padrao)
     return float(passo["pausa_depois"])
+
+
+def executar_passo(passo, texto=None, pontos=None):
+    # type: (dict, Optional[str], Optional[dict]) -> None
+    """Executa um único passo (tecla, paste, click com XY já resolvido, etc.)."""
+    pts = pontos if pontos is not None else localmap.load_pontos()
+    _executar_passo(passo, texto, pts)
 
 
 def _executar_passo(passo, texto, pontos):
@@ -148,6 +155,6 @@ def executar_parte(nome_parte, texto=None, pausa_entre=0.35):
         catalog.validar_passo(passo)
         _executar_passo(passo, texto, pontos)
         executados += 1
-        time.sleep(_pausa_depois_do_passo(passo, pausa_entre))
+        time.sleep(pausa_depois_do_passo(passo, pausa_entre))
 
     return executados
