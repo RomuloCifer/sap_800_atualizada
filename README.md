@@ -9,33 +9,43 @@ Dois cliques em `iniciar.bat`
 
 Na tela:
 
-- **Iniciar automação** — roda a parte selecionada
-- **Mapear** — pede clique do meio (roda) em cada passo ainda sem XY nesta máquina
+- **Iniciar automação** — espera **5s** (contagem na tela) para você focar o SAP, depois roda a parte
+- **Mapear** — só passos com XY; **grave com o botão do meio** (apertar a roda). Esc cancela
 
 ## Arquivos importantes
 
 | Arquivo | Vai pro Git? | Função |
 |---------|--------------|--------|
-| `mapa_passos.json` | Sim | Nomes / ids / ordem dos passos (**sem** x,y) |
+| `mapa_passos.json` | Sim | Nomes / ids / kinds (**sem** x,y) |
 | `pontos_local.json` | **Não** | Coordenadas desta máquina |
+| `.scratch/` | Sim | Norte + decisões (não é código) |
 
-## Como adicionar um passo
+## Organização (`automation/`)
 
-Edite `mapa_passos.json`, dentro da parte, por exemplo:
+| Módulo | Responsabilidade |
+|--------|------------------|
+| `app_ui.py` | Tela |
+| `mapa.py` | Lê o catálogo |
+| `kinds.py` | O que precisa XY / auto / usuário |
+| `localmap.py` | Captura e grava XY local |
+| `teclado.py` | Teclas / atalhos / colar |
+| `runner.py` | Executa a parte |
+| `win_mouse.py` | Mouse Win32 |
 
-```json
-{
-  "id": "abrir_batch.campo_batch",
-  "ordem": 1,
-  "kind": "click_and_type",
-  "nome": "campo batch",
-  "obs": "clicar e digitar o batch"
-}
-```
+## Kinds
 
-Kinds suportados agora: `click`, `click_and_type`.
+- `click` — mapear + clique automático
+- `keys` / `hotkey` / `paste` — automáticos, sem aviso e sem mapear
+- `user_action` — pede o usuário (ex.: clicar no XML) e espera OK
 
-Depois: abra o app → selecione a parte → **Mapear**.
+Tempos opcionais no passo: `pausa` (entre teclas do mesmo passo) e `pausa_depois` (após o passo; padrão `0.35`). Teclas vão por Win32 SendInput.
+
+## Partes atuais
+
+- `abrir_batch` — F3×2 → clique batch → delete×10 → colar → relógio → lápis
+- `pegar_xml` — F6 → Ctrl+F6 → clique do usuário → Ctrl+A → Ctrl+C → F3
+
+Detalhes: `.scratch/partes.md`.
 
 ## Observação
 

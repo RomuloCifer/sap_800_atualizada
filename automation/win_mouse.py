@@ -124,3 +124,43 @@ def click(x, y, clicks=1, interval=0.08):
         )
         if i + 1 < clicks:
             time.sleep(interval)
+
+
+# Virtual-key codes
+VK_MBUTTON = 0x04  # botão do meio (roda)
+VK_ESCAPE = 0x1B
+
+
+def _key_down(vk):
+    # type: (int) -> bool
+    return bool(ctypes.windll.user32.GetAsyncKeyState(vk) & 0x8000)
+
+
+def wait_middle_click(cancel_check=None, poll=0.02):
+    # type: (object, float) -> tuple
+    """
+    Espera clique do botão do meio (roda).
+    Retorna (x, y) ou None se cancel_check() for True (ex.: Esc).
+    """
+    ensure_dpi_awareness()
+    # Espera soltar se já estiver pressionado
+    while _key_down(VK_MBUTTON):
+        if cancel_check and cancel_check():
+            return None
+        time.sleep(poll)
+    while True:
+        if cancel_check and cancel_check():
+            return None
+        if _key_down(VK_MBUTTON):
+            x, y = position()
+            while _key_down(VK_MBUTTON):
+                if cancel_check and cancel_check():
+                    return None
+                time.sleep(poll)
+            return int(x), int(y)
+        time.sleep(poll)
+
+
+def escape_pressed():
+    # type: () -> bool
+    return _key_down(VK_ESCAPE)

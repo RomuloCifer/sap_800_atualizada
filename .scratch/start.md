@@ -1,6 +1,9 @@
 # Ideia — novo projeto (do zero)
 
-Copie esta pasta `.scratch/ideia-novo-projeto` para o repositório/pasta nova.  
+> Estado atual e organização: ver [estado.md](estado.md) e [partes.md](partes.md).  
+> Este arquivo é o norte original; decisões novas vão nos outros.
+
+Copie esta pasta `.scratch/` para o repositório/pasta nova.  
 Isto **não** é implementação. É só o norte.
 
 Referência de fluxo (o que já existia e funcionava, porém lento): projeto `sap_800` na Área de Trabalho.  

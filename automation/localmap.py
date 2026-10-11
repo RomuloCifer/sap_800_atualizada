@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import tkinter as tk
-from pynput import keyboard, mouse
 
+from automation import kinds
 from automation import mapa as catalog
 from automation import win_mouse
 
@@ -63,9 +63,9 @@ def resolve_xy(passo_id, pontos=None):
 
 def _pedir_ponto(passo, indice, total):
     # type: (dict, int, int) -> Optional[Tuple[int, int]]
-    """Abre janela e espera clique do meio. Retorna (x,y) ou None se cancelar."""
+    """Abre janela e espera BOTÃO DO MEIO (roda) para gravar XY. Esc cancela."""
     win_mouse.ensure_dpi_awareness()
-    result = {"action": None, "x": 0, "y": 0}  # type: dict
+    cancelled = {"flag": False}
 
     # Preferir Toplevel se a tela principal já existe (evita segundo Tk).
     if tk._default_root is not None:
@@ -119,9 +119,9 @@ def _pedir_ponto(passo, indice, total):
 
     tk.Label(
         root,
-        text="Posicione o mouse e clique com a roda (botão do meio) para gravar.\nEsc cancela.",
-        font=("Segoe UI", 10),
-        fg="#dddddd",
+        text="GRAVAR = botão do MEIO do mouse (apertar a roda)\nEsc ou fechar a janela = cancelar",
+        font=("Segoe UI", 11, "bold"),
+        fg="#7CFC00",
         bg="#1e1e1e",
         justify="left",
     ).pack(anchor="w", padx=16, pady=(12, 0))
@@ -143,66 +143,61 @@ def _pedir_ponto(passo, indice, total):
         except tk.TclError:
             pass
 
-    def _on_key(key):
-        if key == keyboard.Key.esc:
-            result["action"] = "cancel"
-
-    def _on_click(x, y, button, pressed):
-        if pressed and button == mouse.Button.middle:
-            result["action"] = "ok"
-            result["x"] = int(x)
-            result["y"] = int(y)
-
-    key_listener = keyboard.Listener(on_press=_on_key)
-    key_listener.daemon = True
-    key_listener.start()
-    mouse_listener = mouse.Listener(on_click=_on_click)
-    mouse_listener.daemon = True
-    mouse_listener.start()
-    _tick()
-
     def _on_close():
-        result["action"] = "cancel"
+        cancelled["flag"] = True
 
     root.protocol("WM_DELETE_WINDOW", _on_close)
+    _tick()
+    root.update_idletasks()
+    root.update()
 
-    while result["action"] is None:
+    def _cancel():
+        if cancelled["flag"]:
+            return True
+        if win_mouse.escape_pressed():
+            cancelled["flag"] = True
+            return True
         try:
             root.update()
         except tk.TclError:
-            break
-        time.sleep(0.02)
+            cancelled["flag"] = True
+            return True
+        return False
 
-    for listener in (key_listener, mouse_listener):
-        try:
-            listener.stop()
-        except Exception:
-            pass
+    xy = win_mouse.wait_middle_click(cancel_check=_cancel)
     try:
         root.destroy()
     except Exception:
         pass
 
-    if result["action"] != "ok":
+    if xy is None:
         return None
     time.sleep(0.15)
-    return int(result["x"]), int(result["y"])
+    return int(xy[0]), int(xy[1])
 
 
 def mapear_parte(nome_parte, remapear_tudo=False):
     # type: (str, bool) -> Tuple[int, int]
     """
-    Mapeia os passos da parte.
-    Retorna (gravados_agora, total_passos).
+    Mapeia só passos que precisam de XY (click / click_and_type).
+    Teclas, paste e user_action são ignorados no Mapear.
+    Retorna (gravados_agora, total_que_precisam_xy).
     """
-    passos = catalog.passos_da_parte(nome_parte)
-    if not passos:
+    todos = catalog.passos_da_parte(nome_parte)
+    if not todos:
         raise RuntimeError(
             "A parte '{}' não tem passos em mapa_passos.json ainda.".format(nome_parte)
         )
 
-    for passo in passos:
+    for passo in todos:
         catalog.validar_passo(passo)
+
+    passos = catalog.passos_com_xy(nome_parte)
+    if not passos:
+        raise RuntimeError(
+            "A parte '{}' não tem passos com clique para mapear "
+            "(só teclas/ações automáticas ou do usuário).".format(nome_parte)
+        )
 
     pontos = load_pontos()
     if remapear_tudo:
@@ -228,10 +223,13 @@ def mapear_parte(nome_parte, remapear_tudo=False):
 
 def ids_faltando(nome_parte):
     # type: (str) -> List[str]
-    passos = catalog.passos_da_parte(nome_parte)
+    """Só ids de passos que precisam de coordenada local."""
+    passos = catalog.passos_com_xy(nome_parte)
     pontos = load_pontos()
     faltam = []
     for passo in passos:
+        if not kinds.precisa_xy(passo.get("kind")):
+            continue
         pid = str(passo["id"])
         item = pontos.get(pid)
         if not item or "x" not in item or "y" not in item:

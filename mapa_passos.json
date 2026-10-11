@@ -3,10 +3,114 @@
   "descricao": "Catálogo de passos por parte. Só nomes/ids — sem coordenadas. XY fica em pontos_local.json (local).",
   "partes": {
     "abrir_batch": {
-      "passos": []
+      "titulo": "Abrir batch",
+      "passos": [
+        {
+          "id": "abrir_batch.voltar_f3",
+          "ordem": 1,
+          "kind": "keys",
+          "keys": ["f3", "f3"],
+          "pausa": 0.35,
+          "pausa_depois": 1.0,
+          "nome": "voltar F3 duas vezes",
+          "obs": "F3×2 rápido entre teclas; espera 1s depois dos dois"
+        },
+        {
+          "id": "abrir_batch.clique_antes_batch",
+          "ordem": 2,
+          "kind": "click",
+          "pausa_depois": 1.0,
+          "nome": "antes do número batch",
+          "obs": "1 clique antes do número batch; espera 1s"
+        },
+        {
+          "id": "abrir_batch.apagar_batch",
+          "ordem": 3,
+          "kind": "keys",
+          "keys": ["delete"],
+          "repeat": 10,
+          "nome": "apagar batch anterior",
+          "obs": "Delete 10x para apagar o batch anterior"
+        },
+        {
+          "id": "abrir_batch.colar_batch",
+          "ordem": 4,
+          "kind": "paste",
+          "pausa_depois": 0.5,
+          "nome": "colar batch",
+          "obs": "Colar o batch do campo Texto da tela (depois virá do Excel)"
+        },
+
+
+        {
+          "id": "abrir_batch.clique_relogio",
+          "ordem": 5,
+          "kind": "click",
+          "pausa_depois": 1.0,
+          "nome": "relógio",
+          "obs": "1 clique no relógio; espera 1s"
+        },
+        {
+          "id": "abrir_batch.clique_lapis_azul",
+          "ordem": 6,
+          "kind": "click",
+          "pausa_depois": 1.0,
+          "nome": "lápis azul",
+          "obs": "1 clique no lápis azul; espera 1s"
+        }
+      ]
     },
     "pegar_xml": {
-      "passos": []
+      "titulo": "Pegar XML com informações daquele batch",
+      "passos": [
+        {
+          "id": "pegar_xml.tecla_f6",
+          "ordem": 1,
+          "kind": "keys",
+          "keys": ["f6"],
+          "nome": "tecla F6",
+          "obs": "Tecla F6"
+        },
+        {
+          "id": "pegar_xml.abrir_xml",
+          "ordem": 2,
+          "kind": "hotkey",
+          "keys": ["ctrl", "f6"],
+          "nome": "abrir XML",
+          "obs": "Ctrl+F6 para abrir o XML"
+        },
+        {
+          "id": "pegar_xml.clique_usuario_xml",
+          "ordem": 3,
+          "kind": "user_action",
+          "nome": "clique do usuário no XML",
+          "obs": "Clique na informação do XML e depois confirme OK nesta janela"
+        },
+        {
+          "id": "pegar_xml.selecionar_tudo",
+          "ordem": 4,
+          "kind": "hotkey",
+          "keys": ["ctrl", "a"],
+          "nome": "selecionar tudo",
+          "obs": "Ctrl+A para selecionar toda a informação do XML"
+        },
+        {
+          "id": "pegar_xml.copiar",
+          "ordem": 5,
+          "kind": "hotkey",
+          "keys": ["ctrl", "c"],
+          "nome": "copiar XML",
+          "obs": "Ctrl+C para copiar toda a informação"
+        },
+        {
+          "id": "pegar_xml.voltar_f3",
+          "ordem": 6,
+          "kind": "keys",
+          "keys": ["f3"],
+          "nome": "voltar F3",
+          "obs": "Tecla F3 para voltar"
+        }
+      ]
     }
   }
 }
