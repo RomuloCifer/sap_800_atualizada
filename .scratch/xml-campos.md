@@ -10,6 +10,7 @@ Parser: `automation/xml_nfe.py`
 | invoice | `3319` | `ide/nNF` |
 | recipient (completo) | `00.907.845/0015-60` | `dest/CNPJ` formatado |
 | recipient (sufixo) | `0015-60` | últimos 6 dígitos do CNPJ |
+| recipient (filial) | `0015` | 4 dígitos da filial (`BBBB` em `…/BBBB-CC`) — **Business Place** em OJ1B1N |
 | Issue date | `13.11.2025` | `ide/dhEmi` |
 | protocol number | `135253475578265` | `protNFe/nProt` |
 | protocol date | `13.11.2025` | `dhRecbto` |

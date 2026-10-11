@@ -114,6 +114,123 @@
           "obs": "Tecla F3 para voltar"
         }
       ]
+    },
+    "abrir_oj1b1n": {
+      "titulo": "Abrir OJ1B1N",
+      "passos": [
+        {
+          "id": "abrir_oj1b1n.clique_inicial",
+          "ordem": 1,
+          "kind": "click",
+          "pausa_depois": 0.5,
+          "nome": "clique inicial",
+          "obs": "1 clique (foco no campo comando)"
+        },
+        {
+          "id": "abrir_oj1b1n.escrever_tcode",
+          "ordem": 2,
+          "kind": "type",
+          "text": "/oj1b1n",
+          "pausa_depois": 0.3,
+          "nome": "escrever /oj1b1n",
+          "obs": "Escrever /oj1b1n"
+        },
+        {
+          "id": "abrir_oj1b1n.enter_tcode",
+          "ordem": 3,
+          "kind": "keys",
+          "keys": ["enter"],
+          "pausa_depois": 1.0,
+          "nome": "enter após tcode",
+          "obs": "Enter após /oj1b1n"
+        },
+        {
+          "id": "abrir_oj1b1n.clique_nf_type",
+          "ordem": 4,
+          "kind": "click",
+          "pausa_depois": 0.5,
+          "nome": "Nota Fiscal Type",
+          "obs": "1 clique no campo Nota Fiscal Type"
+        },
+        {
+          "id": "abrir_oj1b1n.escrever_x0",
+          "ordem": 5,
+          "kind": "type",
+          "text": "X0",
+          "pausa_depois": 0.3,
+          "nome": "escrever X0",
+          "obs": "Escrever X0"
+        },
+        {
+          "id": "abrir_oj1b1n.clique_business_place",
+          "ordem": 6,
+          "kind": "click",
+          "pausa_depois": 0.5,
+          "nome": "Business Place",
+          "obs": "1 clique no campo Business Place"
+        },
+        {
+          "id": "abrir_oj1b1n.escrever_recipient_filial",
+          "ordem": 7,
+          "kind": "type",
+          "text_from": "recipient_filial",
+          "pausa_depois": 0.5,
+          "nome": "Business Place = filial recipient",
+          "obs": "Só a filial do CNPJ (ex.: 0015 de 00.907.845/0015-60). Vem do XML."
+        },
+        {
+          "id": "abrir_oj1b1n.clique_nf_partner_function",
+          "ordem": 8,
+          "kind": "click",
+          "pausa_depois": 0.4,
+          "nome": "NF Partner Function",
+          "obs": "1 clique em NF Partner Function"
+        },
+        {
+          "id": "abrir_oj1b1n.tecla_v",
+          "ordem": 9,
+          "kind": "keys",
+          "keys": ["v"],
+          "pausa_depois": 0.3,
+          "nome": "tecla V",
+          "obs": "Tecla V seleciona a opção correta"
+        },
+        {
+          "id": "abrir_oj1b1n.enter_partner_function",
+          "ordem": 10,
+          "kind": "keys",
+          "keys": ["enter"],
+          "pausa_depois": 0.5,
+          "nome": "enter Partner Function",
+          "obs": "Enter após V"
+        },
+        {
+          "id": "abrir_oj1b1n.clique_partner_id",
+          "ordem": 11,
+          "kind": "click",
+          "pausa_depois": 0.5,
+          "nome": "Partner ID",
+          "obs": "1 clique em Partner ID"
+        },
+        {
+          "id": "abrir_oj1b1n.escrever_issuer_id",
+          "ordem": 12,
+          "kind": "type",
+          "text_from": "issuer_id",
+          "pausa_depois": 0.3,
+          "nome": "Partner ID = Issuer Id",
+          "obs": "Issuer Id do Excel (coluna R). Lógica Excel ainda não ligada."
+        },
+        {
+          "id": "abrir_oj1b1n.enter_partner_id",
+          "ordem": 13,
+          "kind": "keys",
+          "keys": ["enter"],
+          "pausa_depois": 0.5,
+          "nome": "enter Partner ID",
+          "obs": "Enter após Partner ID"
+        }
+      ]
     }
   }
 }

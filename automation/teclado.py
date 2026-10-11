@@ -12,6 +12,7 @@ import pyperclip
 INPUT_KEYBOARD = 1
 KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_EXTENDEDKEY = 0x0001
+KEYEVENTF_UNICODE = 0x0004
 # Virtual-key codes
 _VK = {
     "f3": 0x72,
@@ -153,6 +154,23 @@ def hotkey(nomes, pausa=0.08, hold=0.06):
         time.sleep(0.02)
 
     time.sleep(max(0.0, float(pausa)))
+
+
+def digitar_texto(texto, pausa_char=0.03):
+    # type: (str, float) -> None
+    """Digita caractere a caractere (KEYEVENTF_UNICODE). Usado em kind=type."""
+    if texto is None:
+        return
+    for ch in str(texto):
+        code = ord(ch)
+        inp = INPUT(type=INPUT_KEYBOARD)
+        inp.ki = KEYBDINPUT(0, code, KEYEVENTF_UNICODE, 0, 0)
+        if ctypes.windll.user32.SendInput(1, ctypes.byref(inp), ctypes.sizeof(INPUT)) != 1:
+            raise RuntimeError("Falha ao digitar {!r}".format(ch))
+        inp2 = INPUT(type=INPUT_KEYBOARD)
+        inp2.ki = KEYBDINPUT(0, code, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, 0, 0)
+        ctypes.windll.user32.SendInput(1, ctypes.byref(inp2), ctypes.sizeof(INPUT))
+        time.sleep(max(0.0, float(pausa_char)))
 
 
 def colar_texto(texto):

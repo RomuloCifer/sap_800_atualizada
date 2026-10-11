@@ -176,12 +176,13 @@ def _pedir_ponto(passo, indice, total):
     return int(xy[0]), int(xy[1])
 
 
-def mapear_parte(nome_parte, remapear_tudo=False, texto=None, pausa_entre=0.35):
-    # type: (str, bool, Optional[str], float) -> Tuple[int, int]
+def mapear_parte(nome_parte, remapear_tudo=False, texto=None, pausa_entre=0.35, contexto=None):
+    # type: (str, bool, Optional[str], float, Optional[dict]) -> Tuple[int, int]
     """
     Roda a parte em ordem (F6, Ctrl+F6, etc.) e só pausa nos cliques
     que ainda precisam de XY (botão do meio). Depois do clique gravado,
     executa o clique para o fluxo continuar.
+    text_from sem contexto: pergunta o valor na hora (Mapear).
     Retorna (gravados_agora, total_que_precisam_xy).
     """
     # Import tardio evita ciclo localmap <-> runner.
@@ -211,6 +212,7 @@ def mapear_parte(nome_parte, remapear_tudo=False, texto=None, pausa_entre=0.35):
     total_xy = len(com_xy)
     indice_xy = 0
     gravados = 0
+    ctx = dict(contexto or {})
 
     win_mouse.ensure_dpi_awareness()
 
@@ -230,10 +232,13 @@ def mapear_parte(nome_parte, remapear_tudo=False, texto=None, pausa_entre=0.35):
                 gravados += 1
                 save_pontos(pontos)
 
-            # Executa o clique (novo ou já existente) para seguir o fluxo no SAP.
-            runner.executar_passo(passo, texto=texto, pontos=pontos)
+            runner.executar_passo(
+                passo, texto=texto, pontos=pontos, contexto=ctx, pedir_texto=True
+            )
         else:
-            runner.executar_passo(passo, texto=texto, pontos=pontos)
+            runner.executar_passo(
+                passo, texto=texto, pontos=pontos, contexto=ctx, pedir_texto=True
+            )
 
         time.sleep(runner.pausa_depois_do_passo(passo, pausa_entre))
 

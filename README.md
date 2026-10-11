@@ -43,7 +43,8 @@ Tempos opcionais no passo: `pausa` (entre teclas do mesmo passo) e `pausa_depois
 ## Partes atuais
 
 - `abrir_batch` — F3×2 → clique batch → delete×10 → colar → relógio → lápis
-- `pegar_xml` — F6 → Ctrl+F6 → clique do usuário → Ctrl+A → Ctrl+C → F3
+- `pegar_xml` — F6 → Ctrl+F6 → clique XML → Ctrl+A → Ctrl+C → F3
+- `abrir_oj1b1n` — `/oj1b1n` → X0 → Business Place (filial) → Partner Function (V) → Partner ID (Issuer Id)
 
 Detalhes: `.scratch/partes.md`.
 

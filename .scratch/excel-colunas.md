@@ -18,7 +18,8 @@ Letras podem mudar se a planilha ganhar/remover colunas — preferir casar pelo 
 | Dado | Excel | XML |
 |------|-------|-----|
 | Batch | coluna D `Batch` | — |
-| Issuer Sap | coluna R `Issuer Id` | — (ausente no NF-e) |
+| Issuer Sap / Partner ID (OJ1B1N) | coluna R `Issuer Id` | — (ausente no NF-e) |
 | Valor | coluna T `Total Value` | `total/ICMSTot/vNF` |
+| Business Place (OJ1B1N) | — | filial do recipient no XML (`0015`, não `0015-60`) |
 
 Ver também: [xml-campos.md](xml-campos.md).

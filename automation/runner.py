@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import time
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, Optional
 
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 
 from automation import kinds
 from automation import localmap
@@ -22,6 +22,51 @@ def set_user_action_handler(handler):
     # type: (Optional[Callable[[dict], bool]]) -> None
     global _user_action_handler
     _user_action_handler = handler
+
+
+def _resolver_texto(passo, texto=None, contexto=None, pedir_se_faltar=False):
+    # type: (dict, Optional[str], Optional[Dict[str, Any]], bool) -> str
+    """
+    Ordem:
+    1) passo['text'] fixo (ex.: /oj1b1n, X0)
+    2) passo['text_from'] no contexto (ex.: recipient_filial, issuer_id)
+    3) texto da tela (batch etc.)
+    4) se pedir_se_faltar (Mapear): pergunta na UI
+    """
+    pid = passo.get("id")
+    fixo = passo.get("text")
+    if fixo is not None and str(fixo) != "":
+        return str(fixo)
+
+    tf = (passo.get("text_from") or "").strip()
+    ctx = contexto or {}
+    if tf:
+        if tf in ctx and ctx[tf] is not None and str(ctx[tf]) != "":
+            return str(ctx[tf])
+        if pedir_se_faltar:
+            root = tk._default_root
+            valor = simpledialog.askstring(
+                "Valor para mapear",
+                "Digite o valor de '{}' (passo {}).\n"
+                "Depois virá do XML/Excel automaticamente.".format(tf, pid),
+                parent=root,
+            )
+            if valor is None or not str(valor).strip():
+                raise RuntimeError(
+                    "Passo '{}' precisa de '{}' para continuar o Mapear.".format(pid, tf)
+                )
+            return str(valor).strip()
+        raise RuntimeError(
+            "Passo '{}' espera contexto['{}'] (ainda não ligado ao XML/Excel)."
+            .format(pid, tf)
+        )
+
+    if texto is not None and str(texto).strip():
+        return str(texto).strip()
+
+    raise RuntimeError(
+        "Passo '{}' sem texto (preencha a tela ou contexto).".format(pid)
+    )
 
 
 def _pedir_acao_usuario(passo):
@@ -64,15 +109,15 @@ def pausa_depois_do_passo(passo, padrao=0.35):
     return float(passo["pausa_depois"])
 
 
-def executar_passo(passo, texto=None, pontos=None):
-    # type: (dict, Optional[str], Optional[dict]) -> None
-    """Executa um único passo (tecla, paste, click com XY já resolvido, etc.)."""
+def executar_passo(passo, texto=None, pontos=None, contexto=None, pedir_texto=False):
+    # type: (dict, Optional[str], Optional[dict], Optional[Dict[str, Any]], bool) -> None
+    """Executa um único passo (tecla, paste/type, click com XY já resolvido, etc.)."""
     pts = pontos if pontos is not None else localmap.load_pontos()
-    _executar_passo(passo, texto, pts)
+    _executar_passo(passo, texto, pts, contexto=contexto, pedir_texto=pedir_texto)
 
 
-def _executar_passo(passo, texto, pontos):
-    # type: (dict, Optional[str], dict) -> None
+def _executar_passo(passo, texto, pontos, contexto=None, pedir_texto=False):
+    # type: (dict, Optional[str], dict, Optional[Dict[str, Any]], bool) -> None
     pid = str(passo["id"])
     kind = str(passo.get("kind") or "")
 
@@ -96,13 +141,13 @@ def _executar_passo(passo, texto, pontos):
         return
 
     if kind == "paste":
-        valor = texto if texto is not None else (passo.get("text") or "")
-        if not str(valor).strip():
-            raise RuntimeError(
-                "Passo '{}' precisa do batch/texto (preencha o campo na tela)."
-                .format(pid)
-            )
-        teclado.colar_texto(str(valor).strip())
+        valor = _resolver_texto(passo, texto=texto, contexto=contexto, pedir_se_faltar=pedir_texto)
+        teclado.colar_texto(valor)
+        return
+
+    if kind == "type":
+        valor = _resolver_texto(passo, texto=texto, contexto=contexto, pedir_se_faltar=pedir_texto)
+        teclado.digitar_texto(valor)
         return
 
     if kind == "user_action":
@@ -118,21 +163,20 @@ def _executar_passo(passo, texto, pontos):
             win_mouse.click(x, y)
             time.sleep(0.12)
             teclado.limpar_campo_delete(int(passo.get("limpar") or 10))
-            valor = texto if texto is not None else (passo.get("text") or "")
-            if valor:
-                teclado.colar_texto(str(valor).strip())
+            valor = _resolver_texto(
+                passo, texto=texto, contexto=contexto, pedir_se_faltar=pedir_texto
+            )
+            teclado.colar_texto(valor)
             return
 
     raise RuntimeError("kind desconhecido '{}' no passo '{}'.".format(kind, pid))
 
 
-def executar_parte(nome_parte, texto=None, pausa_entre=0.35):
-    # type: (str, Optional[str], float) -> int
+def executar_parte(nome_parte, texto=None, pausa_entre=0.35, contexto=None):
+    # type: (str, Optional[str], float, Optional[Dict[str, Any]]) -> int
     """
     Roda todos os passos da parte.
-    - keys/hotkey/paste: silenciosos
-    - click: usa XY local
-    - user_action: pede confirmação ao usuário
+    contexto: dict com chaves text_from (recipient_filial, issuer_id, …).
     """
     win_mouse.ensure_dpi_awareness()
     passos = catalog.passos_da_parte(nome_parte)
@@ -153,7 +197,7 @@ def executar_parte(nome_parte, texto=None, pausa_entre=0.35):
     executados = 0
     for passo in passos:
         catalog.validar_passo(passo)
-        _executar_passo(passo, texto, pontos)
+        _executar_passo(passo, texto, pontos, contexto=contexto, pedir_texto=False)
         executados += 1
         time.sleep(pausa_depois_do_passo(passo, pausa_entre))
 

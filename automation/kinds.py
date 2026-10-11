@@ -6,7 +6,7 @@ from __future__ import annotations
 KINDS_COM_XY = frozenset({"click", "click_and_type"})
 
 # Rodam sozinhos (tecla / colar). Sem aviso e sem mapeamento.
-KINDS_AUTO = frozenset({"keys", "hotkey", "paste"})
+KINDS_AUTO = frozenset({"keys", "hotkey", "paste", "type"})
 
 # Pausam e pedem ação do usuário (ex.: clicar no XML). Sem XY.
 KINDS_USER = frozenset({"user_action"})

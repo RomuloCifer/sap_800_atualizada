@@ -1,6 +1,6 @@
 # Estado do projeto (atualizado)
 
-Última atualização relevante: Excel documentado — Batch (D), Issuer Id (R), Total Value (T); sem lógica ainda.
+Última atualização relevante: parte `abrir_oj1b1n`; Business Place = filial XML (`0015`); Partner ID = Issuer Id Excel.
 
 ## Organização
 

@@ -33,7 +33,8 @@ class DadosNFe:
     serie: str
     recipient_cnpj: str
     recipient_cnpj_fmt: str
-    recipient_sufixo: str  # ex.: 0015-60
+    recipient_sufixo: str  # ex.: 0015-60 (filial + DV)
+    recipient_filial: str  # ex.: 0015 — só os 4 dígitos da filial (Business Place)
     recipient_nome: str
     issue_date: str  # DD.MM.YYYY
     protocol_number: str
@@ -106,6 +107,21 @@ def sufixo_cnpj(digitos):
     if len(d) < 6:
         return d
     return "{}-{}".format(d[-6:-2], d[-2:])
+
+
+def filial_cnpj(digitos):
+    # type: (str) -> str
+    """
+    Filial do CNPJ: 4 dígitos após a barra (BBBB em AA.AAA.AAA/BBBB-CC).
+    Ex.: 00.907.845/0015-60 → 0015 (pode ser 0001, 0016, etc.).
+    """
+    d = re.sub(r"\D", "", digitos or "")
+    if len(d) != 14:
+        # fallback: tenta pegar 4 dígitos antes dos 2 finais
+        if len(d) >= 6:
+            return d[-6:-2]
+        return d
+    return d[8:12]
 
 
 def formatar_data_br(iso_dt):
@@ -251,6 +267,7 @@ def parse_nfe_xml(xml_texto):
         recipient_cnpj=re.sub(r"\D", "", dest_cnpj),
         recipient_cnpj_fmt=formatar_cnpj(dest_cnpj),
         recipient_sufixo=sufixo_cnpj(dest_cnpj),
+        recipient_filial=filial_cnpj(dest_cnpj),
         recipient_nome=dest_nome,
         issue_date=formatar_data_br(dh_emi),
         protocol_number=n_prot,
