@@ -67,7 +67,8 @@ Tempos opcionais no passo: `pausa` (entre teclas do mesmo passo) e `pausa_depois
 - `abrir_oj1b1n` — `/oj1b1n` → Enter → X0 → Tab×2 → filial → Tab → V → Tab → Partner ID → Enter
 - `preencher_oj1b1n` — Nine-Digit No (`000003319`) → Tab → série (`004`) → Tab → issue date
 - `preencher_itens` — âncoras de linha (Mapear) → por item: `1` + material/desc/qtd/preço + CFOP/AA + impostos + Plant
-- `preencher_taxes` — seleciona N itens → Taxes (2025/2026+) → Value → Other Base → Taxes II → CBS/IBS (Excel K)
+- `preencher_taxes` — seleciona N itens → Taxes → Value → Other Base → Taxes II → CBS/IBS → E matemático
+- `preencher_nfe_data` — Protocol No/Date/Time + Random No (da chave) + DV
 
 Detalhes: `.scratch/partes.md`.
 

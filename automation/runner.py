@@ -242,8 +242,19 @@ def _apos_parte(nome_parte, contexto):
         contexto["valor_fmt"] = dados.valor_fmt
         contexto["cfop"] = dados.cfop
         contexto["chave_acesso"] = dados.chave_acesso
+        contexto["protocol_number"] = dados.protocol_number
+        contexto["protocol_date"] = dados.protocol_date
+        contexto["protocol_time"] = dados.protocol_time
         contexto["protocol_line"] = dados.protocol_line
         contexto["issue_date"] = dados.issue_date
+        # Random No + DV: últimos 9 dígitos da chave → 8 + 1 (ex.: …140033194 → 14003319 / 4)
+        chave_dig = "".join(c for c in str(dados.chave_acesso or "") if c.isdigit())
+        if len(chave_dig) >= 9:
+            contexto["random_no"] = chave_dig[-9:-1]
+            contexto["random_dv"] = chave_dig[-1]
+        else:
+            contexto["random_no"] = ""
+            contexto["random_dv"] = ""
         contexto["itens"] = list(dados.itens)
         contexto["_nfe"] = dados
 

@@ -19,6 +19,8 @@ Parser: `automation/xml_nfe.py`
 | protocol date | `13.11.2025` | `dhRecbto` |
 | protocol time | `14:09:16` | `dhRecbto` |
 | protocol line | `135253475578265 13.11.2025 14:09:16` | montado |
+| random_no | `14003319` | 8 dígitos: `chave[-9:-1]` (cNF) |
+| random_dv | `4` | último dígito da chave (cDV) |
 | CFOP | `5906` | `det/prod/CFOP` (1º / comum) |
 | valor | `1,730.36` (`1730.36`) | `total/ICMSTot/vNF` |
 | chave | `352511…33194` | `chNFe` |

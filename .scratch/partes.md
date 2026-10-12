@@ -12,6 +12,7 @@ Ordem atual do **Iniciar tudo**:
 4. `preencher_oj1b1n`
 5. `preencher_itens`
 6. `preencher_taxes`
+7. `preencher_nfe_data`
 
 Para incluir uma parte nova no fim-a-fim: defina em `partes` **e** acrescente o nome em `fluxo`.
 
@@ -109,6 +110,8 @@ Pontos: 5 âncoras NF Item + 1 Plant.
 4. Value **início** `<` e **fim** `>` (drag + Ctrl+C)
 5. Other Base **1–6**
 6. **Taxes II** + **CBS and IBS**
+7. **Taxes** (antes do E matemático — ponto separado)
+8. **E matemático**
 
 ### Automação
 
@@ -118,3 +121,17 @@ Pontos: 5 âncoras NF Item + 1 Plant.
 4. Se **2025-**: Tax Type → `ICOF` → Enter×2 → `ICM0` → … → `IPI0`
 5. Drag Value → Ctrl+C → cola Other Base **de baixo pra cima** (2025: 4→1; 2026+: 6→1) → Enter×2
 6. Taxes II → CBS and IBS (Excel col. **K** `CBS/IBS`; vazio = só clique)
+7. Clique **Taxes** (ponto mapeado à parte) → clique **E matemático** → fim da parte
+
+---
+
+## PREENCHER NF-e DATA (`preencher_nfe_data`)
+
+1. Clique **NF-e Data**
+2. Clique **Protocol No.** → `protocol_number` (nProt)
+3. Tab → **Proc Date** (`protocol_date`)
+4. Tab → Backspace×8 → **Proc Time** (`protocol_time`)
+5. Tab×3 → **Random No.** = 8 dígitos do fim da chave (`…140033194` → `14003319`)
+6. Tab → Delete → último dígito da chave (`4`)
+
+Pontos a mapear: `clique_nfe_data`, `clique_protocol_no`.

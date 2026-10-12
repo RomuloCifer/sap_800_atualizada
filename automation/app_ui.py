@@ -406,9 +406,10 @@ class App(tk.Tk):
         self._cancel_run = False
         self._set_busy(
             True,
-            "Iniciar tudo… Batch={} | Issuer={} | excel_linha={}".format(
+            "Iniciar tudo… Batch={} | Issuer={} | CBS/IBS={!r} | excel_linha={}".format(
                 ctx.get("batch"),
                 ctx.get("issuer_id"),
+                ctx.get("cbs_ibs") or "",
                 ctx.get("excel_linha") or "-",
             ),
         )

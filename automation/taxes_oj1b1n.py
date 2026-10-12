@@ -39,6 +39,8 @@ IDS_OTHER_BASE = (
 )
 ID_TAXES_II = "preencher_taxes.clique_taxes_ii"
 ID_CBS_IBS = "preencher_taxes.clique_cbs_ibs"
+ID_TAXES_ANTES_MATEMATICO = "preencher_taxes.clique_taxes_antes_matematico"
+ID_E_MATEMATICO = "preencher_taxes.clique_e_matematico"
 
 TAXES_BASE = ("ICOF", "ICM0", "IPIS", "IPI0")
 
@@ -184,9 +186,38 @@ def executar_preenchimento(contexto, pontos, passo=None):
 
     abort.check()
     _clicar(ID_TAXES_II, pontos, 0.4)
-    _clicar(ID_CBS_IBS, pontos, 0.3)
-    cbs = str(ctx.get("cbs_ibs") or "").strip()
+    cbs = _resolver_cbs_ibs(ctx)
+    _clicar(ID_CBS_IBS, pontos, 0.45)
     if cbs:
+        abort.sleep(0.2)
         _escrever(cbs)
+        abort.sleep(0.1)
+
+    abort.check()
+    _clicar(ID_TAXES_ANTES_MATEMATICO, pontos, 0.5)
+    abort.check()
+    _clicar(ID_E_MATEMATICO, pontos, 0.4)
 
     return n
+
+
+def _resolver_cbs_ibs(ctx):
+    # type: (Dict[str, Any]) -> str
+    """CBS/IBS do contexto; se vazio e houver Excel, relê a linha."""
+    cbs = str(ctx.get("cbs_ibs") or "").strip()
+    if cbs:
+        return cbs
+    caminho = ctx.get("excel_arquivo")
+    linha = ctx.get("excel_linha")
+    if not caminho or not linha:
+        return ""
+    try:
+        from automation.excel_fila import ler_cbs_ibs_linha
+
+        relido = ler_cbs_ibs_linha(caminho, int(linha))
+        if relido:
+            ctx["cbs_ibs"] = relido
+            return relido
+    except Exception:
+        pass
+    return ""

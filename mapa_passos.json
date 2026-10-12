@@ -7,7 +7,8 @@
     "abrir_oj1b1n",
     "preencher_oj1b1n",
     "preencher_itens",
-    "preencher_taxes"
+    "preencher_taxes",
+    "preencher_nfe_data"
   ],
   "partes": {
     "abrir_batch": {
@@ -512,12 +513,152 @@
           "obs": "Clique CBS and IBS (valor vem do Excel col. K; pode ficar vazio)"
         },
         {
-          "id": "preencher_taxes.preencher",
+          "id": "preencher_taxes.clique_taxes_antes_matematico",
           "ordem": 19,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Taxes (antes do E matemático)",
+          "obs": "Clique Taxes DEPOIS do CBS/IBS — ponto separado (não é Taxes II nem o Taxes do início)"
+        },
+        {
+          "id": "preencher_taxes.clique_e_matematico",
+          "ordem": 20,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "E matemático",
+          "obs": "Clique no botão E matemático (último passo de Taxes)"
+        },
+        {
+          "id": "preencher_taxes.preencher",
+          "ordem": 21,
           "kind": "fill_taxes",
           "pausa_depois": 0.4,
           "nome": "executar Taxes",
-          "obs": "Seleciona N itens → Taxes → tax types → copia Value → Other Base → Taxes II → CBS/IBS"
+          "obs": "Seleciona N itens → Taxes → … → CBS/IBS → Taxes (2º) → E matemático"
+        }
+      ]
+    },
+    "preencher_nfe_data": {
+      "titulo": "Preencher NF-e Data",
+      "passos": [
+        {
+          "id": "preencher_nfe_data.clique_nfe_data",
+          "ordem": 1,
+          "kind": "click",
+          "pausa_depois": 0.5,
+          "nome": "NF-e Data",
+          "obs": "1 clique em NF-e Data"
+        },
+        {
+          "id": "preencher_nfe_data.clique_protocol_no",
+          "ordem": 2,
+          "kind": "click",
+          "pausa_depois": 0.35,
+          "nome": "Protocol No.",
+          "obs": "1 clique em Protocol No."
+        },
+        {
+          "id": "preencher_nfe_data.escrever_protocol_no",
+          "ordem": 3,
+          "kind": "type",
+          "text_from": "protocol_number",
+          "pausa_depois": 0.25,
+          "nome": "número do protocolo",
+          "obs": "nProt do XML"
+        },
+        {
+          "id": "preencher_nfe_data.tab_proc_date",
+          "ordem": 4,
+          "kind": "keys",
+          "keys": ["tab"],
+          "pausa_depois": 0.25,
+          "nome": "Tab até Proc Date",
+          "obs": "Tab após Protocol No."
+        },
+        {
+          "id": "preencher_nfe_data.escrever_proc_date",
+          "ordem": 5,
+          "kind": "type",
+          "text_from": "protocol_date",
+          "pausa_depois": 0.25,
+          "nome": "Proc Date",
+          "obs": "dhRecbto → DD.MM.YYYY"
+        },
+        {
+          "id": "preencher_nfe_data.tab_proc_time",
+          "ordem": 6,
+          "kind": "keys",
+          "keys": ["tab"],
+          "pausa_depois": 0.25,
+          "nome": "Tab até Proc Time",
+          "obs": "Tab; cursor vai ao fim de 00:00:00"
+        },
+        {
+          "id": "preencher_nfe_data.apagar_proc_time",
+          "ordem": 7,
+          "kind": "keys",
+          "keys": ["backspace"],
+          "repeat": 8,
+          "pausa": 0.02,
+          "hold": 0.02,
+          "pausa_depois": 0.15,
+          "nome": "Backspace×8 no Proc Time",
+          "obs": "Apaga 00:00:00 antes de escrever o horário"
+        },
+        {
+          "id": "preencher_nfe_data.escrever_proc_time",
+          "ordem": 8,
+          "kind": "type",
+          "text_from": "protocol_time",
+          "pausa_depois": 0.25,
+          "nome": "Proc Time",
+          "obs": "dhRecbto → HH:MM:SS"
+        },
+        {
+          "id": "preencher_nfe_data.tabs_random_no",
+          "ordem": 9,
+          "kind": "keys",
+          "keys": ["tab", "tab", "tab"],
+          "pausa": 0.2,
+          "pausa_depois": 0.3,
+          "nome": "Tab×3 até Random No.",
+          "obs": "Três tabs até Random No."
+        },
+        {
+          "id": "preencher_nfe_data.escrever_random_no",
+          "ordem": 10,
+          "kind": "type",
+          "text_from": "random_no",
+          "pausa_depois": 0.25,
+          "nome": "Random No.",
+          "obs": "8 dígitos: chave[-9:-1] (ex.: 14003319 de …140033194)"
+        },
+        {
+          "id": "preencher_nfe_data.tab_random_dv",
+          "ordem": 11,
+          "kind": "keys",
+          "keys": ["tab"],
+          "pausa_depois": 0.25,
+          "nome": "Tab até dígito verificador",
+          "obs": "Tab após Random No."
+        },
+        {
+          "id": "preencher_nfe_data.delete_dv",
+          "ordem": 12,
+          "kind": "keys",
+          "keys": ["delete"],
+          "pausa_depois": 0.15,
+          "nome": "Delete no DV",
+          "obs": "Delete antes de escrever o último dígito da chave"
+        },
+        {
+          "id": "preencher_nfe_data.escrever_random_dv",
+          "ordem": 13,
+          "kind": "type",
+          "text_from": "random_dv",
+          "pausa_depois": 0.4,
+          "nome": "DV (último da chave)",
+          "obs": "Último dígito da chave (ex.: 4 de …140033194)"
         }
       ]
     }

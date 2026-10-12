@@ -21,6 +21,8 @@ _VK = {
     "f10": 0x79,
     "delete": 0x2E,
     "del": 0x2E,
+    "backspace": 0x08,
+    "bksp": 0x08,
     "enter": 0x0D,
     "tab": 0x09,
     "esc": 0x1B,

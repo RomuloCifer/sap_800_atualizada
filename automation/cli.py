@@ -55,6 +55,7 @@ def _carregar_excel_se_pedido(args):
     print("  linha:", linha.linha, "Status:", linha.status)
     print("  Batch:", linha.batch)
     print("  Issuer Id:", linha.issuer_id)
+    print("  CBS/IBS:", repr(linha.cbs_ibs or ""))
     if linha.total_value:
         print("  Total Value:", linha.total_value)
 
@@ -93,6 +94,7 @@ def cmd_excel(args):
     print("  Status:", linha.status)
     print("  Batch:", linha.batch)
     print("  Issuer Id:", linha.issuer_id)
+    print("  CBS/IBS:", repr(linha.cbs_ibs or ""))
     print("  Total Value:", linha.total_value)
     return 0
 

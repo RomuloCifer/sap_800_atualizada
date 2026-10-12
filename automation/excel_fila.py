@@ -191,3 +191,30 @@ def primeira_pendente(caminho=None):
     raise RuntimeError(
         "Nenhuma linha com Status='Pendente' em {}.".format(path.name)
     )
+
+
+def ler_cbs_ibs_linha(caminho, linha_1based):
+    # type: (Union[str, Path], int) -> str
+    """Relê CBS/IBS de uma linha específica (1-based, com cabeçalho na 1)."""
+    import openpyxl
+
+    path = Path(caminho)
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    try:
+        ws = wb.active
+        rows = ws.iter_rows(values_only=True)
+        header_row = next(rows)
+        headers = [_norm_header(h) for h in header_row]
+        i_cbs = _achar_coluna(headers, COL_CBS_IBS)
+        if i_cbs is None:
+            return ""
+        alvo = int(linha_1based)
+        for num, row in enumerate(rows, start=2):
+            if num != alvo:
+                continue
+            if row is None or i_cbs >= len(row):
+                return ""
+            return _cell_str(row[i_cbs])
+    finally:
+        wb.close()
+    return ""
