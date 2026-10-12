@@ -255,3 +255,20 @@ def tem_pendente(caminho=None):
         return True
     except RuntimeError:
         return False
+
+
+def marcar_resultado_do_contexto(contexto, sucesso):
+    # type: (dict, bool) -> Optional[str]
+    """
+    Se o contexto veio do Excel (excel_arquivo + excel_linha), grava Status.
+    sucesso True → teste_ok; False → teste_erro.
+    Retorna o status gravado ou None se não havia linha Excel.
+    """
+    ctx = contexto or {}
+    caminho = ctx.get("excel_arquivo")
+    linha = ctx.get("excel_linha")
+    if not caminho or not linha:
+        return None
+    status = STATUS_OK if sucesso else STATUS_ERRO
+    atualizar_status(caminho, int(linha), status)
+    return status

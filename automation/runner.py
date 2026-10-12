@@ -6,7 +6,7 @@ import time
 from typing import Any, Callable, Dict, Optional
 
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import simpledialog
 
 from automation import abort
 from automation import kinds
@@ -74,29 +74,91 @@ def _resolver_texto(passo, texto=None, contexto=None, pedir_se_faltar=False):
     )
 
 
+def _dialogo_verificacao_avulso(titulo, mensagem):
+    # type: (str, str) -> bool
+    """Caixa Tk com OK / Parar (CLI ou quando não há handler da App)."""
+    root = tk._default_root
+    created = False
+    if root is None:
+        root = tk.Tk()
+        root.withdraw()
+        created = True
+
+    win = tk.Toplevel(root)
+    win.title("Verificação humana")
+    win.configure(bg="#1e1e1e")
+    win.attributes("-topmost", True)
+    win.resizable(False, False)
+    win.grab_set()
+    escolha = {"ok": False}
+
+    tk.Label(win, text="Verificação", font=("Segoe UI", 11), fg="#aaaaaa", bg="#1e1e1e").pack(
+        anchor="w", padx=20, pady=(16, 0)
+    )
+    tk.Label(
+        win,
+        text=titulo,
+        font=("Segoe UI", 14, "bold"),
+        fg="#ffffff",
+        bg="#1e1e1e",
+        wraplength=420,
+        justify="left",
+    ).pack(anchor="w", padx=20, pady=(6, 0))
+    tk.Label(
+        win,
+        text=mensagem,
+        font=("Segoe UI", 10),
+        fg="#ffcc66",
+        bg="#1e1e1e",
+        wraplength=420,
+        justify="left",
+    ).pack(anchor="w", padx=20, pady=(10, 0))
+
+    row = tk.Frame(win, bg="#1e1e1e")
+    row.pack(fill="x", padx=20, pady=18)
+
+    def ok():
+        escolha["ok"] = True
+        win.destroy()
+
+    def parar():
+        escolha["ok"] = False
+        win.destroy()
+
+    btn_ok = tk.Button(
+        row, text="OK — continuar", width=18, height=2, font=("Segoe UI", 10, "bold"), command=ok
+    )
+    btn_ok.pack(side="left", padx=(0, 10))
+    tk.Button(row, text="Parar", width=12, height=2, command=parar).pack(side="left")
+    win.protocol("WM_DELETE_WINDOW", parar)
+    win.bind("<Return>", lambda _e: ok())
+    win.bind("<Escape>", lambda _e: parar())
+    win.update_idletasks()
+    w, h = win.winfo_reqwidth(), win.winfo_reqheight()
+    sx, sy = win.winfo_screenwidth(), win.winfo_screenheight()
+    win.geometry("+{}+{}".format(max(40, (sx - w) // 2), max(40, (sy - h) // 3)))
+    btn_ok.focus_set()
+    win.wait_window()
+    if created:
+        try:
+            root.destroy()
+        except Exception:
+            pass
+    return bool(escolha["ok"])
+
+
 def _pedir_acao_usuario(passo):
     # type: (dict) -> None
     nome = passo.get("nome") or passo.get("id")
     obs = (passo.get("obs") or "").strip()
-    msg = obs or "Faça a ação necessária e clique em OK para continuar."
-    payload = {"id": passo.get("id"), "nome": nome, "msg": msg}
+    msg = obs or "Confira a tela e clique em OK para continuar (Parar = interrompe)."
 
     if _user_action_handler is not None:
         ok = bool(_user_action_handler(passo))
     else:
-        root = tk._default_root
-        if root is not None:
-            try:
-                root.attributes("-topmost", True)
-                root.lift()
-            except Exception:
-                pass
-        ok = messagebox.askokcancel(
-            "Ação do usuário",
-            "{}\n\n{}".format(payload["nome"], payload["msg"]),
-        )
+        ok = _dialogo_verificacao_avulso(str(nome), msg)
     if not ok:
-        raise RuntimeError("Usuário cancelou em '{}'.".format(passo.get("id")))
+        raise RuntimeError("Usuario cancelou verificacao em '{}'.".format(passo.get("id")))
 
 def _pausa_do_passo(passo, padrao):
     # type: (dict, float) -> float

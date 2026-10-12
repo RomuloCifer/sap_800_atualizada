@@ -171,8 +171,34 @@ def cmd_fluxo(args):
     def on_parte(nome):
         print(">>> Rodando parte: {}".format(nome), flush=True)
 
-    with abort.sessao():
-        resultado = runner.executar_fluxo(texto=None, contexto=ctx, on_parte=on_parte)
+    try:
+        with abort.sessao():
+            resultado = runner.executar_fluxo(texto=None, contexto=ctx, on_parte=on_parte)
+    except abort.AbortError:
+        from automation.excel_fila import marcar_resultado_do_contexto
+
+        # Abortado pelo usuario: nao marca teste_ok; deixa Pendente
+        raise
+    except Exception:
+        from automation.excel_fila import marcar_resultado_do_contexto
+
+        try:
+            st = marcar_resultado_do_contexto(ctx, False)
+            if st:
+                print("Excel Status ->", st, flush=True)
+        except Exception as exc_mark:
+            print("AVISO: nao gravou Status no Excel:", exc_mark, file=sys.stderr)
+        raise
+
+    from automation.excel_fila import marcar_resultado_do_contexto
+
+    try:
+        st = marcar_resultado_do_contexto(resultado, True)
+        if st:
+            print("Excel Status ->", st, flush=True)
+    except Exception as exc_mark:
+        print("AVISO: nao gravou Status no Excel:", exc_mark, file=sys.stderr)
+
     print("OK - fluxo concluido.")
     print("  passos:", resultado.get("_total_passos"))
     print("  filial XML:", resultado.get("recipient_filial"))

@@ -357,6 +357,14 @@
           "pausa_depois": 0.35,
           "nome": "preencher linhas do XML",
           "obs": "Por item: NF=1 → Material → Desc → Qtd → Preço → CFOP/AA → IC9 → I49 → C70 → P70 → Plant; no fim Enter×(n_itens+1)"
+        },
+        {
+          "id": "preencher_itens.verificar_humano",
+          "ordem": 8,
+          "kind": "user_action",
+          "pausa_depois": 0.2,
+          "nome": "Verificar itens",
+          "obs": "Confira os itens preenchidos e os Enter no final.\nOK = continua | Cancelar = para (Esc também para)."
         }
       ]
     },
@@ -529,12 +537,30 @@
           "obs": "Clique no botão E matemático (último passo de Taxes)"
         },
         {
-          "id": "preencher_taxes.preencher",
+          "id": "preencher_taxes.preencher_ate_other_base",
           "ordem": 21,
           "kind": "fill_taxes",
+          "fase": "ate_other_base",
+          "pausa_depois": 0.3,
+          "nome": "Taxes até Other Base",
+          "obs": "Seleção → tax types (ICOF/…) → Value → Other Base 4/6"
+        },
+        {
+          "id": "preencher_taxes.verificar_humano",
+          "ordem": 22,
+          "kind": "user_action",
+          "pausa_depois": 0.2,
+          "nome": "Verificar Taxes / Other Base",
+          "obs": "Confira tax types (ICOF ICM0 IPIS IPI0 / 2026+) e os valores nas casas Other Base.\nOK = continua | Cancelar = para."
+        },
+        {
+          "id": "preencher_taxes.preencher_fim",
+          "ordem": 23,
+          "kind": "fill_taxes",
+          "fase": "fim",
           "pausa_depois": 0.4,
-          "nome": "executar Taxes",
-          "obs": "Seleciona N itens → Taxes → … → CBS/IBS → Taxes (2º) → E matemático"
+          "nome": "Taxes II → CBS → E matemático",
+          "obs": "Taxes II → CBS/IBS → Taxes → E matemático"
         }
       ]
     },
@@ -672,6 +698,14 @@
           "pausa_depois": 0.4,
           "nome": "DV (último da chave)",
           "obs": "Último dígito da chave (ex.: 4 de …140033194)"
+        },
+        {
+          "id": "preencher_nfe_data.verificar_humano",
+          "ordem": 16,
+          "kind": "user_action",
+          "pausa_depois": 0.2,
+          "nome": "Verificar NF-e Data",
+          "obs": "Confira Protocol No/Date/Time, Random No e DV.\nOK = continua (fecha e próximo na fila) | Cancelar = para."
         }
       ]
     },

@@ -95,6 +95,7 @@ O código calcula a **média do dy** entre linhas e usa isso para todas as linha
 8. Clique Plant → `1502` (ou `1318` se recipient sufixo `0017-22`)
 9. Próxima linha
 10. Ao fim de todos os itens: **Enter** × (quantidade de produtos + 1)
+11. **Verificação humana** — OK para continuar / Cancelar para parar
 
 Pontos: 5 âncoras NF Item + 1 Plant.
 
@@ -120,8 +121,9 @@ Pontos: 5 âncoras NF Item + 1 Plant.
 3. Se **issue date ≥ 01.01.2026**: Tax Type → `IB2S` → Stat.TAX → Enter×2 → `CBS1` → Stat.TAX → Enter×2 → depois `ICOF`/`ICM0`/`IPIS`/`IPI0` (sem novo clique Tax Type)
 4. Se **2025-**: Tax Type → `ICOF` → Enter×2 → `ICM0` → … → `IPI0`
 5. Drag Value → Ctrl+C → cola Other Base **de baixo pra cima** (2025: 4→1; 2026+: 6→1) → Enter×2
-6. Taxes II → CBS and IBS (Excel col. **K** `CBS/IBS`; vazio = só clique)
-7. Clique **Taxes** (ponto mapeado à parte) → clique **E matemático** → fim da parte
+6. **Verificação humana** (tax types + Other Base)
+7. Taxes II → CBS and IBS (Excel col. **K** `CBS/IBS`; vazio = só clique)
+8. Clique **Taxes** (ponto mapeado à parte) → clique **E matemático** → fim da parte
 
 ---
 
@@ -134,6 +136,7 @@ Pontos: 5 âncoras NF Item + 1 Plant.
 4. Tab → **Proc Time** (`protocol_time`) — digita direto
 5. Tab×3 → **Random No.** = 8 dígitos do fim da chave (`…140033194` → `14003319`)
 6. Tab → Delete → último dígito da chave (`4`)
+7. **Verificação humana** — Protocol / Random No / DV
 
 Pontos a mapear: `valor_ini`, `valor_fim`, `clique_nfe_data`, `clique_protocol_no`.
 

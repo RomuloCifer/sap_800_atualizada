@@ -236,8 +236,8 @@ def mapear_parte(nome_parte, remapear_tudo=False, texto=None, pausa_entre=0.35, 
         kind = str(passo.get("kind") or "")
         pid = str(passo["id"])
 
-        if kind in ("fill_itens", "fill_taxes", "verify_valor"):
-            # Mapear só as âncoras; o preenchimento roda no fluxo com o XML.
+        if kind in ("fill_itens", "fill_taxes", "verify_valor", "user_action"):
+            # Mapear só as âncoras; preenchimento / checkpoints rodam no fluxo.
             continue
 
         if kinds.precisa_xy(kind):

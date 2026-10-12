@@ -79,9 +79,17 @@ Detalhes: `.scratch/partes.md`.
 python main.py fluxo --excel
 ```
 
-Pega a 1ª linha `Pendente`. A pessoa acompanha; **Esc** para se der erro.
+Pega a 1ª linha `Pendente`. Em pontos estratégicos aparece uma caixa **OK — continuar** / **Parar** (itens, Taxes/Other Base, NF-e Data). **Esc** também para.
 
-Fila automática (opcional): marque “Fila automática” na tela ou `python main.py fluxo --excel --fila`.
+Se o fluxo terminar com todos os OKs (e a conferência de valor passar): Status Excel → **`teste_ok`**. Se der erro ou Cancelar numa verificação → **`teste_erro`**. Esc no meio deixa **Pendente**. Feche o Excel na planilha para gravar.
+
+Para rodar um atrás do outro com as mesmas caixas de OK:
+
+```powershell
+python main.py fluxo --excel --fila
+```
+
+Ou na tela: **Usar Excel** + **Fila: um atrás do outro** → Iniciar tudo.
 
 ## Parar a automação
 

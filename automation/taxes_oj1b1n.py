@@ -167,36 +167,45 @@ def _colar_other_base(pontos, valor, n_celulas):
 
 def executar_preenchimento(contexto, pontos, passo=None):
     # type: (Optional[Dict[str, Any]], Dict[str, dict], Optional[dict]) -> int
+    """
+    fase no passo:
+      - ate_other_base: seleção → tax types → Value → Other Base (para checkpoint humano)
+      - fim: Taxes II → CBS/IBS → Taxes → E matemático
+      - tudo (padrão): as duas fases sem pausa humana
+    """
     ctx = contexto or {}
+    fase = str((passo or {}).get("fase") or "tudo").strip().lower()
     n = _n_itens(ctx)
     ano_2026 = issue_date_2026_plus(str(ctx.get("issue_date") or ""))
 
-    abort.check()
-    _selecionar_itens(pontos, n)
-    abort.check()
-    _clicar(ID_TAXES, pontos, 0.6)
+    if fase in ("tudo", "ate_other_base"):
+        abort.check()
+        _selecionar_itens(pontos, n)
+        abort.check()
+        _clicar(ID_TAXES, pontos, 0.6)
 
-    abort.check()
-    _preencher_tax_types(pontos, ano_2026)
+        abort.check()
+        _preencher_tax_types(pontos, ano_2026)
 
-    abort.check()
-    valor = _copiar_value(pontos)
-    n_other = 6 if ano_2026 else 4
-    _colar_other_base(pontos, valor, n_other)
+        abort.check()
+        valor = _copiar_value(pontos)
+        n_other = 6 if ano_2026 else 4
+        _colar_other_base(pontos, valor, n_other)
 
-    abort.check()
-    _clicar(ID_TAXES_II, pontos, 0.4)
-    cbs = _resolver_cbs_ibs(ctx)
-    _clicar(ID_CBS_IBS, pontos, 0.45)
-    if cbs:
-        abort.sleep(0.2)
-        _escrever(cbs)
-        abort.sleep(0.1)
+    if fase in ("tudo", "fim"):
+        abort.check()
+        _clicar(ID_TAXES_II, pontos, 0.4)
+        cbs = _resolver_cbs_ibs(ctx)
+        _clicar(ID_CBS_IBS, pontos, 0.45)
+        if cbs:
+            abort.sleep(0.2)
+            _escrever(cbs)
+            abort.sleep(0.1)
 
-    abort.check()
-    _clicar(ID_TAXES_ANTES_MATEMATICO, pontos, 0.5)
-    abort.check()
-    _clicar(ID_E_MATEMATICO, pontos, 0.4)
+        abort.check()
+        _clicar(ID_TAXES_ANTES_MATEMATICO, pontos, 0.5)
+        abort.check()
+        _clicar(ID_E_MATEMATICO, pontos, 0.4)
 
     return n
 

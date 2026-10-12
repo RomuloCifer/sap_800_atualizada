@@ -89,7 +89,7 @@ class App(tk.Tk):
         self.fila_var = tk.BooleanVar(value=False)
         tk.Checkbutton(
             self,
-            text="Fila automática (todos Pendente — opcional)",
+            text="Fila: um atrás do outro (com verificação OK entre etapas)",
             variable=self.fila_var,
             bg="#f4f4f4",
             activebackground="#f4f4f4",
@@ -161,25 +161,98 @@ class App(tk.Tk):
         result = {"ok": False}
         nome = passo.get("nome") or passo.get("id")
         obs = (passo.get("obs") or "").strip()
-        msg = obs or "Faça a ação necessária e clique em OK para continuar."
+        msg = obs or "Confira a tela e clique em OK para continuar."
 
         def mostrar():
             try:
-                self.attributes("-topmost", True)
-                self.lift()
-                result["ok"] = bool(
-                    messagebox.askokcancel(
-                        "Ação do usuário",
-                        "{}\n\n{}".format(nome, msg),
-                        parent=self,
-                    )
-                )
+                result["ok"] = bool(self._dialogo_verificacao(str(nome), msg))
             finally:
                 done.set()
 
         self.after(0, mostrar)
         done.wait()
         return bool(result["ok"])
+
+    def _dialogo_verificacao(self, titulo, mensagem):
+        # type: (str, str) -> bool
+        """Caixa sempre na frente com botões OK / Parar."""
+        win = tk.Toplevel(self)
+        win.title("Verificação humana")
+        win.configure(bg="#1e1e1e")
+        win.attributes("-topmost", True)
+        win.resizable(False, False)
+        win.grab_set()
+
+        escolha = {"ok": False}
+
+        tk.Label(
+            win,
+            text="Verificação",
+            font=("Segoe UI", 11),
+            fg="#aaaaaa",
+            bg="#1e1e1e",
+        ).pack(anchor="w", padx=20, pady=(16, 0))
+
+        tk.Label(
+            win,
+            text=titulo,
+            font=("Segoe UI", 14, "bold"),
+            fg="#ffffff",
+            bg="#1e1e1e",
+            wraplength=420,
+            justify="left",
+        ).pack(anchor="w", padx=20, pady=(6, 0))
+
+        tk.Label(
+            win,
+            text=mensagem,
+            font=("Segoe UI", 10),
+            fg="#ffcc66",
+            bg="#1e1e1e",
+            wraplength=420,
+            justify="left",
+        ).pack(anchor="w", padx=20, pady=(10, 0))
+
+        row = tk.Frame(win, bg="#1e1e1e")
+        row.pack(fill="x", padx=20, pady=18)
+
+        def ok():
+            escolha["ok"] = True
+            win.destroy()
+
+        def parar():
+            escolha["ok"] = False
+            win.destroy()
+
+        btn_ok = tk.Button(
+            row,
+            text="OK — continuar",
+            width=18,
+            height=2,
+            font=("Segoe UI", 10, "bold"),
+            command=ok,
+        )
+        btn_ok.pack(side="left", padx=(0, 10))
+
+        tk.Button(
+            row,
+            text="Parar",
+            width=12,
+            height=2,
+            command=parar,
+        ).pack(side="left")
+
+        win.protocol("WM_DELETE_WINDOW", parar)
+        win.bind("<Return>", lambda _e: ok())
+        win.bind("<Escape>", lambda _e: parar())
+
+        win.update_idletasks()
+        w, h = win.winfo_reqwidth(), win.winfo_reqheight()
+        sx, sy = win.winfo_screenwidth(), win.winfo_screenheight()
+        win.geometry("+{}+{}".format(max(40, (sx - w) // 2), max(40, (sy - h) // 3)))
+        btn_ok.focus_set()
+        win.wait_window()
+        return bool(escolha["ok"])
 
     def _recarregar_partes(self):
         # type: () -> None
@@ -452,23 +525,39 @@ class App(tk.Tk):
                         contexto=ctx,
                         on_parte=on_parte,
                     )
+                status_excel = ""
+                try:
+                    from automation.excel_fila import marcar_resultado_do_contexto
+
+                    st = marcar_resultado_do_contexto(resultado, True)
+                    if st:
+                        status_excel = "\nExcel Status: {}".format(st)
+                except Exception as exc_mark:
+                    status_excel = "\n(AVISO: nao gravou Status: {})".format(exc_mark)
                 partes = " → ".join(resultado.get("_fluxo") or fluxo)
                 msg = (
                     "Fluxo concluído.\n"
                     "Partes: {}\n"
                     "Passos: {}\n"
                     "Filial (XML): {}\n"
-                    "Invoice: {}"
+                    "Invoice: {}{}"
                 ).format(
                     partes,
                     resultado.get("_total_passos"),
                     resultado.get("recipient_filial") or "—",
                     resultado.get("invoice") or "—",
+                    status_excel,
                 )
                 self.after(0, lambda: self._fim_ok(msg))
             except abort.AbortError as exc:
                 self.after(0, lambda: self._fim_abort(str(exc)))
             except Exception as exc:
+                try:
+                    from automation.excel_fila import marcar_resultado_do_contexto
+
+                    marcar_resultado_do_contexto(ctx, False)
+                except Exception:
+                    pass
                 self.after(0, lambda: self._fim_erro("Iniciar tudo", str(exc)))
 
         threading.Thread(target=trabalho, daemon=True).start()
