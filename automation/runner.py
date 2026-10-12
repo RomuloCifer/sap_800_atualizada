@@ -155,6 +155,16 @@ def _executar_passo(passo, texto, pontos, contexto=None, pedir_texto=False):
         _pedir_acao_usuario(passo)
         return
 
+    if kind == "map_only":
+        # Calibração: XY só no Mapear; no fluxo não clica.
+        return
+
+    if kind == "fill_itens":
+        from automation import itens_oj1b1n
+
+        itens_oj1b1n.executar_preenchimento(contexto, pontos, passo=passo)
+        return
+
     if kind in kinds.KINDS_COM_XY:
         x, y = localmap.resolve_xy(pid, pontos)
         if kind == "click":
@@ -226,6 +236,7 @@ def _apos_parte(nome_parte, contexto):
         contexto["chave_acesso"] = dados.chave_acesso
         contexto["protocol_line"] = dados.protocol_line
         contexto["issue_date"] = dados.issue_date
+        contexto["itens"] = list(dados.itens)
         contexto["_nfe"] = dados
 
 

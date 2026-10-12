@@ -52,8 +52,10 @@ Novas partes no fluxo: acrescente o nome em `"fluxo"` no `mapa_passos.json`.
 ## Kinds
 
 - `click` — mapear + clique automático
-- `keys` / `hotkey` / `paste` — automáticos, sem aviso e sem mapear
-- `user_action` — pede o usuário (ex.: clicar no XML) e espera OK
+- `map_only` — só calibração no Mapear (fluxo ignora)
+- `fill_itens` — preenche linhas de item a partir do XML
+- `keys` / `hotkey` / `paste` / `type` — automáticos, sem mapear
+- `user_action` — pede o usuário e espera OK
 
 Tempos opcionais no passo: `pausa` (entre teclas do mesmo passo) e `pausa_depois` (após o passo; padrão `0.35`). Teclas vão por Win32 SendInput.
 
@@ -63,6 +65,7 @@ Tempos opcionais no passo: `pausa` (entre teclas do mesmo passo) e `pausa_depois
 - `pegar_xml` — F6 → Ctrl+F6 → clique XML → Ctrl+A → Ctrl+C → F3
 - `abrir_oj1b1n` — `/oj1b1n` → Enter → X0 → Tab×2 → filial → Tab → V → Tab → Partner ID → Enter
 - `preencher_oj1b1n` — Nine-Digit No (`000003319`) → Tab → série (`004`) → Tab → issue date
+- `preencher_itens` — âncoras de linha (Mapear) → por item: `1` + material/desc/qtd/preço + CFOP/AA + impostos + Plant
 
 Detalhes: `.scratch/partes.md`.
 

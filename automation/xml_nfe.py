@@ -366,12 +366,37 @@ def _parse_nfe_regex(texto):
     emit_cnpj = _re_tag_dentro(texto, "emit", "CNPJ")
     emit_nome = _re_tag_dentro(texto, "emit", "xNome")
 
-    cfops = re.findall(
-        r"<(?:\w+:)?CFOP(?:\s[^>]*)?>([^<]*)</(?:\w+:)?CFOP>",
+    itens = []  # type: List[ItemNFe]
+    cfops = []  # type: List[str]
+    for m_det in re.finditer(
+        r"<(?:\w+:)?det\b([^>]*)>([\s\S]*?)</(?:\w+:)?det>",
         texto,
         flags=re.IGNORECASE,
-    )
-    cfops = [c.strip() for c in cfops if c.strip()]
+    ):
+        attrs, corpo = m_det.group(1), m_det.group(2)
+        m_n = re.search(r'nItem\s*=\s*"(\d+)"', attrs, flags=re.IGNORECASE)
+        n_item = int(m_n.group(1)) if m_n else len(itens) + 1
+        cfop = _re_tag(corpo, "CFOP")
+        if cfop:
+            cfops.append(cfop)
+        itens.append(
+            ItemNFe(
+                n_item=n_item,
+                codigo=_re_tag(corpo, "cProd"),
+                descricao=_re_tag(corpo, "xProd"),
+                cfop=cfop,
+                quantidade=float(_re_tag(corpo, "qCom") or 0),
+                preco_unitario=float(_re_tag(corpo, "vUnCom") or 0),
+                valor_produto=float(_re_tag(corpo, "vProd") or 0),
+            )
+        )
+    if not cfops:
+        cfops = re.findall(
+            r"<(?:\w+:)?CFOP(?:\s[^>]*)?>([^<]*)</(?:\w+:)?CFOP>",
+            texto,
+            flags=re.IGNORECASE,
+        )
+        cfops = [c.strip() for c in cfops if c.strip()]
 
     if not dest_cnpj:
         raise ValueError(
@@ -396,7 +421,7 @@ def _parse_nfe_regex(texto):
         chave,
         v_nf,
         cfops,
-        [],
+        itens,
     )
 
 

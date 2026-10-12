@@ -23,7 +23,8 @@ Parser: `automation/xml_nfe.py`
 | valor | `1,730.36` (`1730.36`) | `total/ICMSTot/vNF` |
 | chave | `352511…33194` | `chNFe` |
 
-Também disponíveis (ainda não pedidos na lógica): série, emit CNPJ/nome, 3 itens (cProd, xProd, qCom, vUnCom).
+Itens (`det/prod`): `cProd`, `xProd`, `qCom`, `vUnCom`, `CFOP` — usados em `preencher_itens`.  
+Plant: `1502` padrão; sufixo recipient `0017-22` → `1318`.
 
 ## Faltando no XML
 

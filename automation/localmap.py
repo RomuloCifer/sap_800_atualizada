@@ -236,6 +236,10 @@ def mapear_parte(nome_parte, remapear_tudo=False, texto=None, pausa_entre=0.35, 
         kind = str(passo.get("kind") or "")
         pid = str(passo["id"])
 
+        if kind == "fill_itens":
+            # Mapear só as âncoras; o preenchimento roda no fluxo com o XML.
+            continue
+
         if kinds.precisa_xy(kind):
             indice_xy += 1
             tem = pid in pontos and "x" in pontos[pid] and "y" in pontos[pid]
@@ -247,6 +251,11 @@ def mapear_parte(nome_parte, remapear_tudo=False, texto=None, pausa_entre=0.35, 
                 pontos[pid] = {"x": xy[0], "y": xy[1]}
                 gravados += 1
                 save_pontos(pontos)
+
+            # map_only: só grava XY (não clica no SAP durante o Mapear)
+            if kind == "map_only":
+                time.sleep(runner.pausa_depois_do_passo(passo, pausa_entre))
+                continue
 
             runner.executar_passo(
                 passo, texto=texto, pontos=pontos, contexto=ctx, pedir_texto=True

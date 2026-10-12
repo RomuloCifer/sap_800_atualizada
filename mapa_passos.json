@@ -5,7 +5,8 @@
     "abrir_batch",
     "pegar_xml",
     "abrir_oj1b1n",
-    "preencher_oj1b1n"
+    "preencher_oj1b1n",
+    "preencher_itens"
   ],
   "partes": {
     "abrir_batch": {
@@ -287,6 +288,73 @@
           "pausa_depois": 0.4,
           "nome": "Issue Date",
           "obs": "dhEmi formatado DD.MM.YYYY (ex.: 13.11.2025)"
+        }
+      ]
+    },
+    "preencher_itens": {
+      "titulo": "Preencher itens",
+      "passos": [
+        {
+          "id": "preencher_itens.ancor_linha_1",
+          "ordem": 1,
+          "kind": "map_only",
+          "row": 1,
+          "pausa_depois": 0,
+          "nome": "NF item linha 1",
+          "obs": "CLIQUE NO MEIO da célula NF Item, linha 1 (só calibração)"
+        },
+        {
+          "id": "preencher_itens.ancor_linha_2",
+          "ordem": 2,
+          "kind": "map_only",
+          "row": 2,
+          "pausa_depois": 0,
+          "nome": "NF item linha 2",
+          "obs": "CLIQUE NO MEIO da célula NF Item, linha 2 (só calibração)"
+        },
+        {
+          "id": "preencher_itens.ancor_linha_5",
+          "ordem": 3,
+          "kind": "map_only",
+          "row": 5,
+          "pausa_depois": 0,
+          "nome": "NF item linha 5",
+          "obs": "CLIQUE NO MEIO da célula NF Item, linha 5 (só calibração)"
+        },
+        {
+          "id": "preencher_itens.ancor_linha_10",
+          "ordem": 4,
+          "kind": "map_only",
+          "row": 10,
+          "pausa_depois": 0,
+          "nome": "NF item linha 10",
+          "obs": "CLIQUE NO MEIO da célula NF Item, linha 10 (só calibração)"
+        },
+        {
+          "id": "preencher_itens.ancor_linha_20",
+          "ordem": 5,
+          "kind": "map_only",
+          "row": 20,
+          "pausa_depois": 0,
+          "nome": "NF item linha 20",
+          "obs": "CLIQUE NO MEIO da célula NF Item, linha 20 (só calibração)"
+        },
+        {
+          "id": "preencher_itens.ancor_plant",
+          "ordem": 6,
+          "kind": "map_only",
+          "row": 1,
+          "pausa_depois": 0,
+          "nome": "Plant linha 1",
+          "obs": "CLIQUE NO FINAL da célula Plant, linha 1 (só calibração)"
+        },
+        {
+          "id": "preencher_itens.preencher",
+          "ordem": 7,
+          "kind": "fill_itens",
+          "pausa_depois": 0.35,
+          "nome": "preencher linhas do XML",
+          "obs": "Por item: NF=1 → Material → Desc → Qtd → Preço → CFOP/AA → IC9 → I49 → C70 → P70 → Plant; no fim Enter×(n_itens+1)"
         }
       ]
     }

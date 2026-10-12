@@ -7,9 +7,10 @@ Espelho do que está em `mapa_passos.json`. Se divergir, o JSON manda para o có
 Ordem atual do **Iniciar tudo**:
 
 1. `abrir_batch`
-2. `pegar_xml` → depois parse do clipboard (`recipient_filial`, invoice, serie, valor…)
+2. `pegar_xml` → depois parse do clipboard (`recipient_filial`, invoice, serie, itens…)
 3. `abrir_oj1b1n`
 4. `preencher_oj1b1n`
+5. `preencher_itens`
 
 Para incluir uma parte nova no fim-a-fim: defina em `partes` **e** acrescente o nome em `fluxo`.
 
@@ -70,3 +71,27 @@ Ponto a mapear: só `clique_campo_escrever`.
 6. Escrever **issue_date** → `text_from: issue_date` (`DD.MM.YYYY`, ex.: `13.11.2025`)
 
 Ponto a mapear: `preencher_oj1b1n.clique_nine_digit`.
+
+---
+
+## PREENCHER ITENS (`preencher_itens`)
+
+### Mapear (calibração — `map_only`)
+
+Clique no **meio** da célula NF Item nas linhas **1, 2, 5, 10, 20** + Plant no **final** da célula (linha 1).  
+O código calcula a **média do dy** entre linhas e usa isso para todas as linhas do XML.
+
+### Automação (por item do XML)
+
+1. Clique NF Item (linha N) → escreve sempre **`1`**
+2. Tab → Material (`cProd`)
+3. Tab → Description (`xProd`)
+4. Tab → Quantity (`qCom`)
+5. Tab → Price (`vUnCom`)
+6. Tab → CFOP SAP: 1º dígito `5→1`, `6→2` + `/AA` (ex.: `5906` → `1906/AA`)
+7. Tab → `IC9` → Tab → `I49` → Tab → `C70` → Tab → `P70`
+8. Clique Plant → `1502` (ou `1318` se recipient sufixo `0017-22`)
+9. Próxima linha
+10. Ao fim de todos os itens: **Enter** × (quantidade de produtos + 1)
+
+Pontos: 5 âncoras NF Item + 1 Plant.
