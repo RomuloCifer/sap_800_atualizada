@@ -4,13 +4,30 @@ Automação por partes, com mapa de passos versionado e coordenadas **locais** p
 
 ## Como abrir
 
-Dois cliques em `iniciar.bat`  
-(na primeira vez cria a `.venv` e instala as dependências).
+**Tela:** dois cliques em `iniciar.bat` (cria a `.venv` na 1ª vez).
+
+**Terminal** (melhor para ver erros / traceback):
+
+```powershell
+cd "caminho\para\sap_800_att"
+.\.venv\Scripts\Activate.ps1
+
+python main.py listar
+python main.py excel                          # proxima linha Status=Pendente
+python main.py fluxo --excel                  # fluxo com Batch + Issuer Id do Excel
+python main.py fluxo --batch X --issuer Y     # manual
+python main.py parte abrir_batch --excel
+```
+
+Ou: `rodar-fluxo.bat` (Excel) / `rodar-fluxo.bat BATCH ISSUER`
 
 Na tela:
 
-- **Iniciar automação** — espera **3s** para focar o SAP, depois roda a parte
-- **Mapear** — também espera **3s**, **roda o fluxo** (F6, etc.) e só pausa nos cliques; grave com o **botão do meio** (roda). Esc cancela
+- **Iniciar tudo** — fluxo completo (`mapa_passos.json` → `fluxo`)
+- **Iniciar parte** — só a parte selecionada
+- **Mapear** — 3s de foco, executa a parte e pausa nos cliques (botão do meio)
+
+Novas partes no fluxo: acrescente o nome em `"fluxo"` no `mapa_passos.json`.
 
 ## Arquivos importantes
 

@@ -1,6 +1,11 @@
 {
   "versao": 1,
   "descricao": "Catálogo de passos por parte. Só nomes/ids — sem coordenadas. XY fica em pontos_local.json (local).",
+  "fluxo": [
+    "abrir_batch",
+    "pegar_xml",
+    "abrir_oj1b1n"
+  ],
   "partes": {
     "abrir_batch": {
       "titulo": "Abrir batch",
@@ -28,18 +33,23 @@
           "ordem": 3,
           "kind": "keys",
           "keys": ["delete"],
-          "repeat": 10,
+          "repeat": 12,
+          "pausa": 0.012,
+          "hold": 0.015,
+          "pausa_depois": 0.15,
           "nome": "apagar batch anterior",
-          "obs": "Delete 10x para apagar o batch anterior"
+          "obs": "Delete rápido (12x) para apagar o batch anterior"
         },
         {
           "id": "abrir_batch.colar_batch",
           "ordem": 4,
           "kind": "paste",
+          "text_from": "batch",
           "pausa_depois": 0.5,
           "nome": "colar batch",
-          "obs": "Colar o batch do campo Texto da tela (depois virá do Excel)"
+          "obs": "Digitar o Batch (contexto batch / Excel col. D) — nunca Issuer Id; sem Ctrl+V"
         },
+
 
 
         {
@@ -119,13 +129,14 @@
       "titulo": "Abrir OJ1B1N",
       "passos": [
         {
-          "id": "abrir_oj1b1n.clique_inicial",
+          "id": "abrir_oj1b1n.clique_campo_escrever",
           "ordem": 1,
           "kind": "click",
           "pausa_depois": 0.5,
-          "nome": "clique inicial",
-          "obs": "1 clique (foco no campo comando)"
+          "nome": "clicar em campo onde escrever",
+          "obs": "1 clique no campo onde escrever (/oj1b1n)"
         },
+
         {
           "id": "abrir_oj1b1n.escrever_tcode",
           "ordem": 2,

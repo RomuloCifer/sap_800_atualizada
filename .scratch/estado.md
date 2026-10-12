@@ -1,6 +1,6 @@
 # Estado do projeto (atualizado)
 
-Última atualização relevante: parte `abrir_oj1b1n`; Business Place = filial XML (`0015`); Partner ID = Issuer Id Excel.
+Última atualização relevante: parse XML do SAP com fallback regex (XML truncado/mismatched).
 
 ## Organização
 
@@ -32,9 +32,10 @@ Excel (doc): [excel-colunas.md](excel-colunas.md) — Batch **D**, Issuer Id **R
 3. **Mapear só pede clique** — kinds `keys` / `hotkey` / `paste` / `user_action` não pedem coordenada.
 4. **Gravar XY = botão do meio** (apertar a roda). Esc cancela. Captura via Win32 (`GetAsyncKeyState`).
 5. **Antes de Iniciar e Mapear** — contagem de **3s** para focar o SAP.
-6. **Mapear** — executa a parte em ordem (teclas/hotkeys/paste); só pausa nos `click` sem XY (ou remapear). Depois grava e clica para o fluxo seguir.
-7. **Na execução** — teclas e paste rodam sem aviso; `user_action` pausa e pede o usuário.
-8. Ao mudar algo estrutural (kinds, partes, contrato dos arquivos), **atualizar este scratch**.
+6. **Mapear** — executa a parte em ordem; só pausa nos `click` sem XY. Depois grava e clica.
+7. **Iniciar tudo** — lê `mapa_passos.json` → `"fluxo"` e roda as partes na ordem. Após `pegar_xml`, parseia o clipboard (filial etc.). Novas partes: criar em `partes` **e** incluir em `fluxo`.
+8. **Na execução** — teclas e paste rodam sem aviso; `user_action` pausa e pede o usuário.
+9. Ao mudar algo estrutural, **atualizar este scratch**.
 
 ## Kinds
 

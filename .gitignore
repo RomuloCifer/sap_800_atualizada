@@ -21,3 +21,5 @@ tools/coordenadas.txt
 *.XLS
 
 runs/
+runs/clipboard_xml_ultimo.txt
+

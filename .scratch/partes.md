@@ -2,6 +2,16 @@
 
 Espelho do que está em `mapa_passos.json`. Se divergir, o JSON manda para o código; atualize os dois.
 
+## Fluxo completo (`"fluxo"` no JSON)
+
+Ordem atual do **Iniciar tudo**:
+
+1. `abrir_batch`
+2. `pegar_xml` → depois parse do clipboard (`recipient_filial`, invoice, valor…)
+3. `abrir_oj1b1n`
+
+Para incluir uma parte nova no fim-a-fim: defina em `partes` **e** acrescente o nome em `fluxo`.
+
 ---
 
 ## ABRIR BATCH (`abrir_batch`)
@@ -32,7 +42,7 @@ Ponto a mapear: `pegar_xml.clique_info_xml`.
 
 ## ABRIR OJ1B1N (`abrir_oj1b1n`)
 
-1. **1 clique** inicial (comando) → `click`
+1. **1 clique** em campo onde escrever → `click` (`abrir_oj1b1n.clique_campo_escrever`)
 2. Escrever `/oj1b1n` → `type` + `text: /oj1b1n`
 3. **Enter** → `keys`
 4. **1 clique** Nota Fiscal Type → `click`
@@ -47,6 +57,6 @@ Ponto a mapear: `pegar_xml.clique_info_xml`.
 12. Escrever **Issuer Id** → `type` + `text_from: issuer_id` (Excel col. R; lógica ainda não ligada)
 13. **Enter** → `keys`
 
-Pontos a mapear: clique inicial, NF Type, Business Place, Partner Function, Partner ID.
+Pontos a mapear: campo onde escrever, NF Type, Business Place, Partner Function, Partner ID.
 
 No **Mapear**, se `recipient_filial` / `issuer_id` ainda não estiverem no contexto, a tela pergunta o valor na hora.

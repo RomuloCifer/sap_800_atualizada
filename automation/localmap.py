@@ -25,6 +25,11 @@ from automation import win_mouse
 ROOT = Path(__file__).resolve().parent.parent
 LOCAL_FILE = ROOT / "pontos_local.json"
 
+# Ids antigos → novos (evita quebrar pontos_local após rename no mapa).
+_ID_ALIASES = {
+    "abrir_oj1b1n.clique_inicial": "abrir_oj1b1n.clique_campo_escrever",
+}
+
 
 def load_pontos():
     # type: () -> Dict[str, dict]
@@ -35,7 +40,18 @@ def load_pontos():
     pontos = data.get("pontos") if isinstance(data, dict) else None
     if not isinstance(pontos, dict):
         return {}
-    return {str(k): v for k, v in pontos.items() if isinstance(v, dict)}
+    out = {str(k): v for k, v in pontos.items() if isinstance(v, dict)}
+    mudou = False
+    for antigo, novo in _ID_ALIASES.items():
+        if antigo in out and novo not in out:
+            out[novo] = out.pop(antigo)
+            mudou = True
+        elif antigo in out and novo in out:
+            out.pop(antigo, None)
+            mudou = True
+    if mudou:
+        save_pontos(out)
+    return out
 
 
 def save_pontos(pontos):

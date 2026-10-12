@@ -1,25 +1,38 @@
-# Excel — colunas relevantes (só documentação)
+# Excel — colunas relevantes
 
-Planilha de trabalho fica em `excel/` (não versionar).  
-Lógica de leitura **ainda não implementada**.
+Planilha em `excel/` (não versionar).  
+Módulo: `automation/excel_fila.py`
 
-## Colunas atuais (NEW ERA / notas não escrituradas)
+## Colunas (por nome do cabeçalho)
 
-| Uso na automação | Nome da coluna | Letra atual | Observação |
-|------------------|----------------|-------------|------------|
-| Batch | `Batch` | **D** | Identifica o lançamento; hoje também pode vir do campo da tela |
-| Issuer Sap | `Issuer Id` | **R** | Ex.: `513088` — **não vem do XML** |
-| Valor (comparar com XML) | `Total Value` | **T** | Comparar com `vNF` do XML (`1,730.36`) |
+| Uso | Nome da coluna | Letra atual |
+|-----|----------------|-------------|
+| Filtro da fila | `Status` | **A** |
+| Batch | `Batch` | **D** |
+| Issuer Sap / Partner ID | `Issuer Id` | **R** |
+| Valor (comparar com XML) | `Total Value` | **T** |
 
-Letras podem mudar se a planilha ganhar/remover colunas — preferir casar pelo **nome** do cabeçalho quando for implementar.
+## Regra da fila
+
+- Pega a **primeira** linha cujo `Status` (trim, case-insensitive) é exatamente **`Pendente`**.
+- Não pega textos tipo `Enviados setembro - pendente revisão`.
+
+## Como rodar
+
+```powershell
+python main.py excel
+python main.py fluxo --excel
+```
+
+Ou `rodar-fluxo.bat` sem argumentos.
+
+Na tela: marcar **Usar Excel (1a linha Status = Pendente)** (já vem marcado).
 
 ## Relação com o XML
 
 | Dado | Excel | XML |
 |------|-------|-----|
-| Batch | coluna D `Batch` | — |
-| Issuer Sap / Partner ID (OJ1B1N) | coluna R `Issuer Id` | — (ausente no NF-e) |
-| Valor | coluna T `Total Value` | `total/ICMSTot/vNF` |
-| Business Place (OJ1B1N) | — | filial do recipient no XML (`0015`, não `0015-60`) |
-
-Ver também: [xml-campos.md](xml-campos.md).
+| Batch | `Batch` | — |
+| Issuer Sap | `Issuer Id` | — |
+| Valor | `Total Value` | `vNF` |
+| Business Place | — | filial do recipient (`0015`) |

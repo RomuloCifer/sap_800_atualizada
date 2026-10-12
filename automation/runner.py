@@ -29,9 +29,9 @@ def _resolver_texto(passo, texto=None, contexto=None, pedir_se_faltar=False):
     """
     Ordem:
     1) passo['text'] fixo (ex.: /oj1b1n, X0)
-    2) passo['text_from'] no contexto (ex.: recipient_filial, issuer_id)
-    3) texto da tela (batch etc.)
-    4) se pedir_se_faltar (Mapear): pergunta na UI
+    2) passo['text_from'] no contexto — só essa chave (batch ≠ issuer_id)
+    3) se pedir_se_faltar (Mapear): pergunta na UI pela chave text_from
+    4) legado: parâmetro texto só se NÃO houver text_from
     """
     pid = passo.get("id")
     fixo = passo.get("text")
@@ -41,8 +41,8 @@ def _resolver_texto(passo, texto=None, contexto=None, pedir_se_faltar=False):
     tf = (passo.get("text_from") or "").strip()
     ctx = contexto or {}
     if tf:
-        if tf in ctx and ctx[tf] is not None and str(ctx[tf]) != "":
-            return str(ctx[tf])
+        if tf in ctx and ctx[tf] is not None and str(ctx[tf]).strip() != "":
+            return str(ctx[tf]).strip()
         if pedir_se_faltar:
             root = tk._default_root
             valor = simpledialog.askstring(
@@ -55,12 +55,16 @@ def _resolver_texto(passo, texto=None, contexto=None, pedir_se_faltar=False):
                 raise RuntimeError(
                     "Passo '{}' precisa de '{}' para continuar o Mapear.".format(pid, tf)
                 )
+            # Guarda no contexto para não pedir de novo / não misturar com outro campo
+            ctx[tf] = str(valor).strip()
             return str(valor).strip()
         raise RuntimeError(
-            "Passo '{}' espera contexto['{}'] (ainda não ligado ao XML/Excel)."
+            "Passo '{}' espera contexto['{}'] "
+            "(Batch→batch, Issuer Id→issuer_id; não misturar)."
             .format(pid, tf)
         )
 
+    # Sem text_from: só então usa o parâmetro legado `texto`
     if texto is not None and str(texto).strip():
         return str(texto).strip()
 
@@ -127,10 +131,11 @@ def _executar_passo(passo, texto, pontos, contexto=None, pedir_texto=False):
             raise RuntimeError("Passo '{}' kind=keys sem 'keys'.".format(pid))
         repeat = int(passo.get("repeat") or 1)
         pausa = _pausa_do_passo(passo, 0.08)
+        hold = float(passo["hold"]) if passo.get("hold") is not None else 0.06
         if len(lista) == 1 and repeat > 1:
-            teclado.pressionar(lista[0], vezes=repeat, pausa=pausa)
+            teclado.pressionar(lista[0], vezes=repeat, pausa=pausa, hold=hold)
         else:
-            teclado.pressionar_lista(lista, pausa=pausa)
+            teclado.pressionar_lista(lista, pausa=pausa, hold=hold)
         return
 
     if kind == "hotkey":
@@ -140,12 +145,8 @@ def _executar_passo(passo, texto, pontos, contexto=None, pedir_texto=False):
         teclado.hotkey(lista, pausa=_pausa_do_passo(passo, 0.08))
         return
 
-    if kind == "paste":
-        valor = _resolver_texto(passo, texto=texto, contexto=contexto, pedir_se_faltar=pedir_texto)
-        teclado.colar_texto(valor)
-        return
-
-    if kind == "type":
+    if kind in ("paste", "type"):
+        # Digita caractere a caractere (Ctrl+V costuma falhar no SAP nesta máquina).
         valor = _resolver_texto(passo, texto=texto, contexto=contexto, pedir_se_faltar=pedir_texto)
         teclado.digitar_texto(valor)
         return
@@ -166,7 +167,7 @@ def _executar_passo(passo, texto, pontos, contexto=None, pedir_texto=False):
             valor = _resolver_texto(
                 passo, texto=texto, contexto=contexto, pedir_se_faltar=pedir_texto
             )
-            teclado.colar_texto(valor)
+            teclado.digitar_texto(valor)
             return
 
     raise RuntimeError("kind desconhecido '{}' no passo '{}'.".format(kind, pid))
@@ -202,3 +203,64 @@ def executar_parte(nome_parte, texto=None, pausa_entre=0.35, contexto=None):
         time.sleep(pausa_depois_do_passo(passo, pausa_entre))
 
     return executados
+
+
+def _apos_parte(nome_parte, contexto):
+    # type: (str, Dict[str, Any]) -> None
+    """Ganchos após cada parte do fluxo (ex.: parse do XML no clipboard)."""
+    if nome_parte == "pegar_xml":
+        from automation.xml_nfe import parse_nfe_clipboard
+
+        dados = parse_nfe_clipboard()
+        contexto["recipient_filial"] = dados.recipient_filial
+        contexto["recipient_sufixo"] = dados.recipient_sufixo
+        contexto["invoice"] = dados.invoice
+        contexto["valor"] = dados.valor
+        contexto["valor_fmt"] = dados.valor_fmt
+        contexto["cfop"] = dados.cfop
+        contexto["chave_acesso"] = dados.chave_acesso
+        contexto["protocol_line"] = dados.protocol_line
+        contexto["issue_date"] = dados.issue_date
+        contexto["_nfe"] = dados
+
+
+def executar_fluxo(texto=None, contexto=None, pausa_entre=0.35, on_parte=None):
+    # type: (Optional[str], Optional[Dict[str, Any]], float, Optional[Callable]) -> Dict[str, Any]
+    """
+    Roda o fluxo completo na ordem de mapa_passos.json → 'fluxo'.
+    Novas partes: basta acrescentar o nome em 'fluxo'.
+    Retorna o contexto acumulado (XML parseado, etc.).
+
+    Batch e Issuer Id só via contexto['batch'] e contexto['issuer_id']
+    (o parâmetro texto, se vier, só preenche batch se ainda não existir).
+    """
+    win_mouse.ensure_dpi_awareness()
+    fluxo = catalog.listar_fluxo()
+    ctx = dict(contexto or {})
+
+    # Garante batch no contexto sem sobrescrever issuer_id
+    if texto is not None and str(texto).strip():
+        if not str(ctx.get("batch") or "").strip():
+            ctx["batch"] = str(texto).strip()
+
+    for nome in fluxo:
+        faltam = localmap.ids_faltando(nome)
+        if faltam:
+            raise RuntimeError(
+                "Parte '{}': faltam coordenadas. Use Mapear nessa parte.\n  - {}".format(
+                    nome, "\n  - ".join(faltam)
+                )
+            )
+
+    total_passos = 0
+    for nome in fluxo:
+        if on_parte is not None:
+            on_parte(nome)
+        # Não passa mais `texto` solto — evita colar batch/issuer no campo errado
+        n = executar_parte(nome, texto=None, pausa_entre=pausa_entre, contexto=ctx)
+        total_passos += n
+        _apos_parte(nome, ctx)
+
+    ctx["_fluxo"] = fluxo
+    ctx["_total_passos"] = total_passos
+    return ctx

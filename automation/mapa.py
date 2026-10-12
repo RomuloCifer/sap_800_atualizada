@@ -29,6 +29,29 @@ def listar_partes(mapa=None):
     return sorted(data.get("partes", {}).keys())
 
 
+def listar_fluxo(mapa=None):
+    # type: (Optional[dict]) -> List[str]
+    """
+    Ordem do fluxo completo (Iniciar tudo).
+    Definido em mapa_passos.json → chave 'fluxo'.
+    Partes novas: incluir nessa lista para entrarem no fluxo.
+    """
+    data = mapa if mapa is not None else load_mapa()
+    fluxo = data.get("fluxo")
+    if not fluxo:
+        raise ValueError(
+            "mapa_passos.json sem 'fluxo'. Adicione a lista de partes na ordem, "
+            "ex.: [\"abrir_batch\", \"pegar_xml\", \"abrir_oj1b1n\"]."
+        )
+    if not isinstance(fluxo, list) or not all(isinstance(x, str) for x in fluxo):
+        raise ValueError("mapa_passos.json: 'fluxo' deve ser lista de nomes de partes.")
+    partes = data.get("partes") or {}
+    faltando = [n for n in fluxo if n not in partes]
+    if faltando:
+        raise KeyError("fluxo referencia partes inexistentes: {}".format(", ".join(faltando)))
+    return list(fluxo)
+
+
 def passos_da_parte(nome_parte, mapa=None):
     # type: (str, Optional[dict]) -> List[Dict[str, Any]]
     data = mapa if mapa is not None else load_mapa()

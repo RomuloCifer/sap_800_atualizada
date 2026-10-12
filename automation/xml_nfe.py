@@ -169,18 +169,97 @@ def parse_valor(texto):
     return float(t)
 
 
-def parse_nfe_xml(xml_texto):
-    # type: (str) -> DadosNFe
-    if not (xml_texto or "").strip():
-        raise ValueError("XML vazio.")
-
-    # Remove declaração estranha / lixo antes do root se houver
-    texto = xml_texto.strip()
+def _limpar_texto_xml(xml_texto):
+    # type: (str) -> str
+    texto = (xml_texto or "").replace("\x00", "").strip()
+    if texto.startswith("\ufeff"):
+        texto = texto.lstrip("\ufeff")
     if not texto.lstrip().startswith("<"):
         idx = texto.find("<")
         if idx >= 0:
             texto = texto[idx:]
+    return texto
 
+
+def _re_tag(texto, nome):
+    # type: (str, str) -> str
+    """Primeira ocorrência de <nome>valor</nome> (com ou sem namespace)."""
+    pat = r"<(?:\w+:)?{0}(?:\s[^>]*)?>([^<]*)</(?:\w+:)?{0}>".format(re.escape(nome))
+    m = re.search(pat, texto, flags=re.IGNORECASE)
+    return (m.group(1).strip() if m else "")
+
+
+def _re_tag_dentro(texto, bloco, nome):
+    # type: (str, str, str) -> str
+    """Tag dentro do primeiro bloco <bloco>... (funciona mesmo com XML truncado)."""
+    m = re.search(
+        r"<(?:\w+:)?{}\b[^>]*>([\s\S]{{0,12000}})".format(re.escape(bloco)),
+        texto,
+        flags=re.IGNORECASE,
+    )
+    if not m:
+        return ""
+    trecho = m.group(1)
+    fecha = re.search(
+        r"</(?:\w+:)?{}>".format(re.escape(bloco)),
+        trecho,
+        flags=re.IGNORECASE,
+    )
+    if fecha:
+        trecho = trecho[: fecha.start()]
+    return _re_tag(trecho, nome)
+
+
+def _montar_dados(
+    invoice,
+    serie,
+    dest_cnpj,
+    dest_nome,
+    emit_cnpj,
+    emit_nome,
+    n_prot,
+    dh_emi,
+    dh_rec,
+    chave,
+    v_nf,
+    cfops,
+    itens,
+):
+    # type: (str, str, str, str, str, str, str, str, str, str, str, List[str], List[ItemNFe]) -> DadosNFe
+    valor = parse_valor(v_nf) if v_nf else 0.0
+    cfop_principal = cfops[0] if cfops else ""
+    if cfops and len(set(cfops)) == 1:
+        cfop_principal = cfops[0]
+    prot_date = formatar_data_br(dh_rec)
+    prot_time = formatar_hora(dh_rec)
+    protocol_line = "{} {} {}".format(n_prot, prot_date, prot_time).strip()
+    return DadosNFe(
+        invoice=invoice,
+        serie=serie,
+        recipient_cnpj=re.sub(r"\D", "", dest_cnpj),
+        recipient_cnpj_fmt=formatar_cnpj(dest_cnpj),
+        recipient_sufixo=sufixo_cnpj(dest_cnpj),
+        recipient_filial=filial_cnpj(dest_cnpj),
+        recipient_nome=dest_nome,
+        issue_date=formatar_data_br(dh_emi),
+        protocol_number=n_prot,
+        protocol_date=prot_date,
+        protocol_time=prot_time,
+        protocol_line=protocol_line,
+        cfop=cfop_principal,
+        cfops=list(cfops),
+        valor=valor,
+        valor_fmt=formatar_valor_us(valor) if v_nf else "",
+        chave_acesso=chave,
+        emit_cnpj=re.sub(r"\D", "", emit_cnpj),
+        emit_nome=emit_nome,
+        issuer_sap=None,
+        itens=list(itens),
+    )
+
+
+def _parse_nfe_etree(texto):
+    # type: (str) -> DadosNFe
     root = ET.fromstring(texto)
 
     invoice = _find_text(root, "NFe/infNFe/ide/nNF") or _find_text(root, "infNFe/ide/nNF")
@@ -197,7 +276,6 @@ def parse_nfe_xml(xml_texto):
     dh_rec = _find_text(root, "protNFe/infProt/dhRecbto")
     chave = _find_text(root, "protNFe/infProt/chNFe")
     if not chave:
-        # fallback Id="NFe..."
         for el in root.iter():
             if _local(el.tag) == "infNFe":
                 chave = (el.attrib.get("Id") or "").replace("NFe", "", 1)
@@ -206,7 +284,6 @@ def parse_nfe_xml(xml_texto):
     v_nf = _find_text(root, "NFe/infNFe/total/ICMSTot/vNF") or _find_text(
         root, "infNFe/total/ICMSTot/vNF"
     )
-    valor = parse_valor(v_nf)
 
     itens = []  # type: List[ItemNFe]
     cfops = []  # type: List[str]
@@ -219,12 +296,8 @@ def parse_nfe_xml(xml_texto):
                 break
         if prod is None:
             continue
-        cfop = ""
-        codigo = ""
-        desc = ""
-        qcom = "0"
-        vun = "0"
-        vprod = "0"
+        cfop = codigo = desc = ""
+        qcom = vun = vprod = "0"
         for child in list(prod):
             name = _local(child.tag)
             if name == "CFOP":
@@ -253,37 +326,113 @@ def parse_nfe_xml(xml_texto):
             )
         )
 
-    cfop_principal = cfops[0] if cfops else ""
-    if cfops and len(set(cfops)) == 1:
-        cfop_principal = cfops[0]
-
-    prot_date = formatar_data_br(dh_rec)
-    prot_time = formatar_hora(dh_rec)
-    protocol_line = "{} {} {}".format(n_prot, prot_date, prot_time).strip()
-
-    return DadosNFe(
-        invoice=invoice,
-        serie=serie,
-        recipient_cnpj=re.sub(r"\D", "", dest_cnpj),
-        recipient_cnpj_fmt=formatar_cnpj(dest_cnpj),
-        recipient_sufixo=sufixo_cnpj(dest_cnpj),
-        recipient_filial=filial_cnpj(dest_cnpj),
-        recipient_nome=dest_nome,
-        issue_date=formatar_data_br(dh_emi),
-        protocol_number=n_prot,
-        protocol_date=prot_date,
-        protocol_time=prot_time,
-        protocol_line=protocol_line,
-        cfop=cfop_principal,
-        cfops=cfops,
-        valor=valor,
-        valor_fmt=formatar_valor_us(valor),
-        chave_acesso=chave,
-        emit_cnpj=re.sub(r"\D", "", emit_cnpj),
-        emit_nome=emit_nome,
-        issuer_sap=None,
-        itens=itens,
+    return _montar_dados(
+        invoice,
+        serie,
+        dest_cnpj,
+        dest_nome,
+        emit_cnpj,
+        emit_nome,
+        n_prot,
+        dh_emi,
+        dh_rec,
+        chave,
+        v_nf,
+        cfops,
+        itens,
     )
+
+
+def _parse_nfe_regex(texto):
+    # type: (str) -> DadosNFe
+    """
+    Fallback quando o XML do SAP vem truncado / tag mismatched.
+    Extrai só os campos que a automação precisa.
+    """
+    invoice = _re_tag(texto, "nNF")
+    serie = _re_tag(texto, "serie")
+    dh_emi = _re_tag(texto, "dhEmi")
+    n_prot = _re_tag(texto, "nProt")
+    dh_rec = _re_tag(texto, "dhRecbto")
+    chave = _re_tag(texto, "chNFe")
+    if not chave:
+        m = re.search(r'Id\s*=\s*"NFe(\d{44})"', texto)
+        if m:
+            chave = m.group(1)
+    v_nf = _re_tag(texto, "vNF")
+
+    dest_cnpj = _re_tag_dentro(texto, "dest", "CNPJ")
+    dest_nome = _re_tag_dentro(texto, "dest", "xNome")
+    emit_cnpj = _re_tag_dentro(texto, "emit", "CNPJ")
+    emit_nome = _re_tag_dentro(texto, "emit", "xNome")
+
+    cfops = re.findall(
+        r"<(?:\w+:)?CFOP(?:\s[^>]*)?>([^<]*)</(?:\w+:)?CFOP>",
+        texto,
+        flags=re.IGNORECASE,
+    )
+    cfops = [c.strip() for c in cfops if c.strip()]
+
+    if not dest_cnpj:
+        raise ValueError(
+            "XML do clipboard incompleto: nao achei CNPJ do destinatario (dest). "
+            "Confira se o Ctrl+A / Ctrl+C pegou o XML inteiro."
+        )
+    if not invoice and not chave:
+        raise ValueError(
+            "XML do clipboard incompleto: nao achei nNF nem chave de acesso."
+        )
+
+    return _montar_dados(
+        invoice,
+        serie,
+        dest_cnpj,
+        dest_nome,
+        emit_cnpj,
+        emit_nome,
+        n_prot,
+        dh_emi,
+        dh_rec,
+        chave,
+        v_nf,
+        cfops,
+        [],
+    )
+
+
+def _salvar_dump_clipboard(texto, motivo):
+    # type: (str, str) -> Path
+    pasta = Path(__file__).resolve().parent.parent / "runs"
+    pasta.mkdir(exist_ok=True)
+    path = pasta / "clipboard_xml_ultimo.txt"
+    path.write_text(
+        "<!-- motivo: {} -->\n{}".format(motivo, texto or ""),
+        encoding="utf-8",
+        errors="replace",
+    )
+    return path
+
+
+def parse_nfe_xml(xml_texto):
+    # type: (str) -> DadosNFe
+    if not (xml_texto or "").strip():
+        raise ValueError("XML vazio.")
+
+    texto = _limpar_texto_xml(xml_texto)
+
+    try:
+        return _parse_nfe_etree(texto)
+    except ET.ParseError as exc:
+        dump = _salvar_dump_clipboard(texto, "ParseError: {}".format(exc))
+        try:
+            dados = _parse_nfe_regex(texto)
+            # ok com fallback
+            return dados
+        except Exception as exc2:
+            raise ValueError(
+                "Falha ao ler XML do SAP ({}). Tentativa regex: {}. "
+                "Dump salvo em {}.".format(exc, exc2, dump)
+            )
 
 
 def parse_nfe_file(caminho):

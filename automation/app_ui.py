@@ -1,4 +1,4 @@
-"""Tela simples: Iniciar automação / Mapear."""
+"""Tela simples: Iniciar tudo / Iniciar parte / Mapear."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from automation import mapa as catalog
 from automation import runner
 from automation import win_mouse
 
-# Tempo para focar a tela do SAP antes da 1ª tecla/clique (Iniciar e Mapear).
+# Tempo para focar a tela do SAP antes da 1ª tecla/clique.
 DELAY_FOCO_SAP_SEGUNDOS = 3
 
 
@@ -24,8 +24,8 @@ class App(tk.Tk):
         win_mouse.ensure_dpi_awareness()
 
         self.title("SAP 800 ATT")
-        self.geometry("420x300")
-        self.minsize(380, 280)
+        self.geometry("440x420")
+        self.minsize(400, 400)
         self.configure(bg="#f4f4f4")
 
         self._busy = False
@@ -42,28 +42,48 @@ class App(tk.Tk):
 
         tk.Label(
             self,
-            text="Parte",
+            text="Parte (Mapear / Iniciar só esta)",
             font=("Segoe UI", 9),
             bg="#f4f4f4",
         ).pack(anchor="w", padx=16)
 
         self.parte_var = tk.StringVar()
         self.combo = ttk.Combobox(
-            self, textvariable=self.parte_var, state="readonly", width=36
+            self, textvariable=self.parte_var, state="readonly", width=38
         )
         self.combo.pack(anchor="w", **pad)
         self._recarregar_partes()
 
-        row_texto = tk.Frame(self, bg="#f4f4f4")
-        row_texto.pack(fill="x", padx=16, pady=4)
+        row_batch = tk.Frame(self, bg="#f4f4f4")
+        row_batch.pack(fill="x", padx=16, pady=2)
         tk.Label(
-            row_texto,
-            text="Batch / texto (tela por enquanto; depois Excel)",
+            row_batch,
+            text="Batch (depois: Excel col. D)",
             bg="#f4f4f4",
         ).pack(anchor="w")
         self.texto_var = tk.StringVar()
-        self.entry_texto = tk.Entry(row_texto, textvariable=self.texto_var, width=38)
+        self.entry_texto = tk.Entry(row_batch, textvariable=self.texto_var, width=40)
         self.entry_texto.pack(anchor="w", pady=2)
+
+        row_issuer = tk.Frame(self, bg="#f4f4f4")
+        row_issuer.pack(fill="x", padx=16, pady=2)
+        tk.Label(
+            row_issuer,
+            text="Issuer Id (depois: Excel col. R)",
+            bg="#f4f4f4",
+        ).pack(anchor="w")
+        self.issuer_var = tk.StringVar()
+        self.entry_issuer = tk.Entry(row_issuer, textvariable=self.issuer_var, width=40)
+        self.entry_issuer.pack(anchor="w", pady=2)
+
+        self.excel_var = tk.BooleanVar(value=True)
+        tk.Checkbutton(
+            self,
+            text="Usar Excel (1a linha Status = Pendente)",
+            variable=self.excel_var,
+            bg="#f4f4f4",
+            activebackground="#f4f4f4",
+        ).pack(anchor="w", padx=16, pady=2)
 
         self.remapear_var = tk.BooleanVar(value=False)
         tk.Checkbutton(
@@ -72,38 +92,53 @@ class App(tk.Tk):
             variable=self.remapear_var,
             bg="#f4f4f4",
             activebackground="#f4f4f4",
-        ).pack(anchor="w", padx=16, pady=4)
+        ).pack(anchor="w", padx=16, pady=2)
 
         btns = tk.Frame(self, bg="#f4f4f4")
-        btns.pack(fill="x", padx=16, pady=12)
+        btns.pack(fill="x", padx=16, pady=8)
+
+        self.btn_fluxo = tk.Button(
+            btns,
+            text="Iniciar tudo",
+            width=14,
+            height=2,
+            command=self._on_iniciar_fluxo,
+        )
+        self.btn_fluxo.pack(side="left", padx=(0, 6))
 
         self.btn_iniciar = tk.Button(
             btns,
-            text="Iniciar automação",
-            width=18,
+            text="Iniciar parte",
+            width=12,
             height=2,
             command=self._on_iniciar,
         )
-        self.btn_iniciar.pack(side="left", padx=(0, 8))
+        self.btn_iniciar.pack(side="left", padx=(0, 6))
 
         self.btn_mapear = tk.Button(
             btns,
             text="Mapear",
-            width=14,
+            width=10,
             height=2,
             command=self._on_mapear,
         )
         self.btn_mapear.pack(side="left")
 
+        fluxo_txt = ""
+        try:
+            fluxo_txt = " → ".join(catalog.listar_fluxo())
+        except Exception:
+            fluxo_txt = "(defina 'fluxo' no mapa_passos.json)"
+
         self.status = tk.Label(
             self,
-            text="Pronto. Contagem de {}s antes de Iniciar/Mapear.".format(
-                DELAY_FOCO_SAP_SEGUNDOS
+            text="Fluxo: {}\nContagem de {}s antes de rodar.".format(
+                fluxo_txt, DELAY_FOCO_SAP_SEGUNDOS
             ),
             font=("Segoe UI", 9),
             fg="#333333",
             bg="#f4f4f4",
-            wraplength=380,
+            wraplength=400,
             justify="left",
         )
         self.status.pack(anchor="w", padx=16, pady=(4, 12))
@@ -112,7 +147,6 @@ class App(tk.Tk):
 
     def _ask_user_action(self, passo):
         # type: (dict) -> bool
-        """Chamado pela thread do runner; mostra dialog na thread do Tk."""
         done = threading.Event()
         result = {"ok": False}
         nome = passo.get("nome") or passo.get("id")
@@ -152,6 +186,7 @@ class App(tk.Tk):
         # type: (bool, Optional[str]) -> None
         self._busy = busy
         state = tk.DISABLED if busy else tk.NORMAL
+        self.btn_fluxo.config(state=state)
         self.btn_iniciar.config(state=state)
         self.btn_mapear.config(state=state)
         if msg is not None:
@@ -164,19 +199,34 @@ class App(tk.Tk):
             raise RuntimeError("Selecione uma parte.")
         return nome
 
-    def _parte_precisa_texto(self, parte):
+    def _parte_precisa_batch(self, parte):
         # type: (str) -> bool
         try:
             passos = catalog.passos_da_parte(parte)
         except Exception:
             return False
-        return any(str(p.get("kind") or "") in ("paste", "click_and_type") for p in passos)
+        return any(
+            (str(p.get("kind") or "") in ("paste", "click_and_type", "type"))
+            and (p.get("text_from") == "batch" or (not p.get("text") and not p.get("text_from") and str(p.get("kind")) == "paste"))
+            for p in passos
+        )
+
+    def _countdown_thread_msgs(self, label):
+        # type: (str) -> bool
+        for resto in range(DELAY_FOCO_SAP_SEGUNDOS, 0, -1):
+            if self._cancel_run:
+                return False
+            self.after(
+                0,
+                lambda r=resto: self.status.config(
+                    text="[{}] Foque o SAP! Começa em {}s…".format(label, r)
+                ),
+            )
+            time.sleep(1)
+        return not self._cancel_run
 
     def _countdown_foco_sap(self, contexto):
         # type: (str) -> bool
-        """
-        Contagem na UI (thread principal). Retorna False se cancelado.
-        """
         for resto in range(DELAY_FOCO_SAP_SEGUNDOS, 0, -1):
             if self._cancel_run:
                 self._set_busy(False, "Cancelado.")
@@ -188,6 +238,29 @@ class App(tk.Tk):
             time.sleep(1)
         return True
 
+    def _contexto_base(self, usar_excel=False):
+        # type: (bool) -> dict
+        """
+        Batch e Issuer Id em chaves separadas — nunca misturar.
+        Se usar_excel: preenche pela 1a linha Status=Pendente (campos manuais sobrescrevem).
+        """
+        ctx = {}
+        if usar_excel:
+            from automation.excel_fila import primeira_pendente
+
+            linha = primeira_pendente()
+            ctx.update(linha.to_contexto())
+            self.texto_var.set(linha.batch)
+            self.issuer_var.set(linha.issuer_id)
+
+        batch = (self.texto_var.get() or "").strip()
+        issuer = (self.issuer_var.get() or "").strip()
+        if batch:
+            ctx["batch"] = batch
+        if issuer:
+            ctx["issuer_id"] = issuer
+        return ctx
+
     def _on_mapear(self):
         # type: () -> None
         if self._busy:
@@ -198,12 +271,15 @@ class App(tk.Tk):
             messagebox.showerror("Mapear", str(exc))
             return
 
-        texto = (self.texto_var.get() or "").strip()
-        if self._parte_precisa_texto(parte) and not texto:
+        try:
+            ctx = self._contexto_base(usar_excel=bool(self.excel_var.get()))
+        except Exception as exc:
+            messagebox.showerror("Mapear", str(exc))
+            return
+        if self._parte_precisa_batch(parte) and not ctx.get("batch"):
             messagebox.showerror(
                 "Mapear",
-                "Preencha o Batch / texto: o Mapear também roda o fluxo "
-                "(inclui colar o batch).",
+                "Preencha o Batch ou marque Usar Excel.",
             )
             self.entry_texto.focus_set()
             return
@@ -222,12 +298,14 @@ class App(tk.Tk):
             gravados, total = localmap.mapear_parte(
                 parte,
                 remapear_tudo=remapear,
-                texto=texto if texto else None,
+                texto=None,
+                contexto=ctx,
             )
             msg = (
-                "Mapear ok: {} novo(s) / {} clique(s) em '{}'.\n"
-                "(Teclas do fluxo foram executadas durante o mapeamento.)"
-            ).format(gravados, total, parte)
+                "Mapear ok: {} novo(s) / {} clique(s) em '{}'.".format(
+                    gravados, total, parte
+                )
+            )
             self._fim_ok(msg)
         except Exception as exc:
             self._fim_erro("Mapear", str(exc))
@@ -239,49 +317,120 @@ class App(tk.Tk):
         try:
             parte = self._parte_selecionada()
         except Exception as exc:
-            messagebox.showerror("Iniciar", str(exc))
+            messagebox.showerror("Iniciar parte", str(exc))
             return
 
-        texto = (self.texto_var.get() or "").strip()
-        if self._parte_precisa_texto(parte) and not texto:
+        try:
+            ctx = self._contexto_base(usar_excel=bool(self.excel_var.get()))
+        except Exception as exc:
+            messagebox.showerror("Iniciar parte", str(exc))
+            return
+        if self._parte_precisa_batch(parte) and not ctx.get("batch"):
             messagebox.showerror(
-                "Iniciar",
-                "Preencha o campo Batch / texto antes de iniciar.\n"
-                "(Por enquanto vem da tela; depois virá do Excel.)",
+                "Iniciar parte",
+                "Preencha o Batch ou marque Usar Excel.",
             )
             self.entry_texto.focus_set()
             return
 
         self._cancel_run = False
-        self._set_busy(
-            True,
-            "Foque o SAP! Começa em {}s…".format(DELAY_FOCO_SAP_SEGUNDOS),
-        )
+        self._set_busy(True, "Iniciar parte…")
 
         def trabalho():
             try:
-                for resto in range(DELAY_FOCO_SAP_SEGUNDOS, 0, -1):
-                    if self._cancel_run:
-                        self.after(0, lambda: self._set_busy(False, "Cancelado."))
-                        return
-                    self.after(
-                        0,
-                        lambda r=resto: self.status.config(
-                            text="[Iniciar] Foque o SAP! Começa em {}s…".format(r)
-                        ),
-                    )
-                    time.sleep(1)
-                if self._cancel_run:
+                if not self._countdown_thread_msgs("Parte"):
                     self.after(0, lambda: self._set_busy(False, "Cancelado."))
                     return
                 self.after(
                     0, lambda: self.status.config(text="Rodando '{}'…".format(parte))
                 )
-                n = runner.executar_parte(parte, texto=texto if texto else None)
+                n = runner.executar_parte(parte, texto=None, contexto=ctx)
                 msg = "Concluído: {} passo(s) em '{}'.".format(n, parte)
                 self.after(0, lambda: self._fim_ok(msg))
             except Exception as exc:
-                self.after(0, lambda: self._fim_erro("Iniciar", str(exc)))
+                self.after(0, lambda: self._fim_erro("Iniciar parte", str(exc)))
+
+        threading.Thread(target=trabalho, daemon=True).start()
+
+    def _on_iniciar_fluxo(self):
+        # type: () -> None
+        if self._busy:
+            return
+        try:
+            fluxo = catalog.listar_fluxo()
+        except Exception as exc:
+            messagebox.showerror("Iniciar tudo", str(exc))
+            return
+
+        try:
+            ctx = self._contexto_base(usar_excel=bool(self.excel_var.get()))
+        except Exception as exc:
+            messagebox.showerror("Iniciar tudo", str(exc))
+            return
+
+        if "abrir_batch" in fluxo and not ctx.get("batch"):
+            messagebox.showerror(
+                "Iniciar tudo",
+                "Preencha o Batch ou marque Usar Excel (Status=Pendente).",
+            )
+            self.entry_texto.focus_set()
+            return
+
+        if "abrir_oj1b1n" in fluxo and not ctx.get("issuer_id"):
+            messagebox.showerror(
+                "Iniciar tudo",
+                "Preencha o Issuer Id ou marque Usar Excel (Status=Pendente).",
+            )
+            self.entry_issuer.focus_set()
+            return
+
+        self._cancel_run = False
+        self._set_busy(
+            True,
+            "Iniciar tudo… Batch={} | Issuer={} | excel_linha={}".format(
+                ctx.get("batch"),
+                ctx.get("issuer_id"),
+                ctx.get("excel_linha") or "-",
+            ),
+        )
+
+        def trabalho():
+            try:
+                if not self._countdown_thread_msgs("Fluxo"):
+                    self.after(0, lambda: self._set_busy(False, "Cancelado."))
+                    return
+
+                def on_parte(nome):
+                    self.after(
+                        0,
+                        lambda n=nome: self.status.config(
+                            text="Fluxo: rodando '{}'… (batch={} issuer={})".format(
+                                n, ctx.get("batch"), ctx.get("issuer_id")
+                            )
+                        ),
+                    )
+
+                resultado = runner.executar_fluxo(
+                    texto=None,
+                    contexto=ctx,
+                    on_parte=on_parte,
+                )
+                partes = " → ".join(resultado.get("_fluxo") or fluxo)
+                msg = (
+                    "Fluxo concluído.\n"
+                    "Partes: {}\n"
+                    "Passos: {}\n"
+                    "Filial (XML): {}\n"
+                    "Invoice: {}"
+                ).format(
+                    partes,
+                    resultado.get("_total_passos"),
+                    resultado.get("recipient_filial") or "—",
+                    resultado.get("invoice") or "—",
+                )
+                self.after(0, lambda: self._fim_ok(msg))
+            except Exception as exc:
+                self.after(0, lambda: self._fim_erro("Iniciar tudo", str(exc)))
 
         threading.Thread(target=trabalho, daemon=True).start()
 
