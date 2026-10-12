@@ -54,6 +54,7 @@ Novas partes no fluxo: acrescente o nome em `"fluxo"` no `mapa_passos.json`.
 - `click` — mapear + clique automático
 - `map_only` — só calibração no Mapear (fluxo ignora)
 - `fill_itens` — preenche linhas de item a partir do XML
+- `fill_taxes` — seleção de itens + Taxes / Other Base / CBS-IBS
 - `keys` / `hotkey` / `paste` / `type` — automáticos, sem mapear
 - `user_action` — pede o usuário e espera OK
 
@@ -66,8 +67,13 @@ Tempos opcionais no passo: `pausa` (entre teclas do mesmo passo) e `pausa_depois
 - `abrir_oj1b1n` — `/oj1b1n` → Enter → X0 → Tab×2 → filial → Tab → V → Tab → Partner ID → Enter
 - `preencher_oj1b1n` — Nine-Digit No (`000003319`) → Tab → série (`004`) → Tab → issue date
 - `preencher_itens` — âncoras de linha (Mapear) → por item: `1` + material/desc/qtd/preço + CFOP/AA + impostos + Plant
+- `preencher_taxes` — seleciona N itens → Taxes (2025/2026+) → Value → Other Base → Taxes II → CBS/IBS (Excel K)
 
 Detalhes: `.scratch/partes.md`.
+
+## Parar a automação
+
+Durante o fluxo ou uma parte: aperte **Esc** (funciona mesmo com o SAP em foco).
 
 ## Observação
 

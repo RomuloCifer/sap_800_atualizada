@@ -6,7 +6,8 @@
     "pegar_xml",
     "abrir_oj1b1n",
     "preencher_oj1b1n",
-    "preencher_itens"
+    "preencher_itens",
+    "preencher_taxes"
   ],
   "partes": {
     "abrir_batch": {
@@ -355,6 +356,168 @@
           "pausa_depois": 0.35,
           "nome": "preencher linhas do XML",
           "obs": "Por item: NF=1 → Material → Desc → Qtd → Preço → CFOP/AA → IC9 → I49 → C70 → P70 → Plant; no fim Enter×(n_itens+1)"
+        }
+      ]
+    },
+    "preencher_taxes": {
+      "titulo": "Preencher Taxes",
+      "passos": [
+        {
+          "id": "preencher_taxes.ancor_sel_1",
+          "ordem": 1,
+          "kind": "map_only",
+          "row": 1,
+          "pausa_depois": 0,
+          "nome": "selecionar item linha 1",
+          "obs": "Clique para SELECIONAR o item na linha 1 (calibração dy)"
+        },
+        {
+          "id": "preencher_taxes.ancor_sel_2",
+          "ordem": 2,
+          "kind": "map_only",
+          "row": 2,
+          "pausa_depois": 0,
+          "nome": "selecionar item linha 2",
+          "obs": "Clique para SELECIONAR o item na linha 2 (calibração dy)"
+        },
+        {
+          "id": "preencher_taxes.ancor_sel_5",
+          "ordem": 3,
+          "kind": "map_only",
+          "row": 5,
+          "pausa_depois": 0,
+          "nome": "selecionar item linha 5",
+          "obs": "Clique para SELECIONAR o item na linha 5 (calibração dy)"
+        },
+        {
+          "id": "preencher_taxes.ancor_sel_10",
+          "ordem": 4,
+          "kind": "map_only",
+          "row": 10,
+          "pausa_depois": 0,
+          "nome": "selecionar item linha 10",
+          "obs": "Clique para SELECIONAR o item na linha 10 (calibração dy)"
+        },
+        {
+          "id": "preencher_taxes.ancor_sel_20",
+          "ordem": 5,
+          "kind": "map_only",
+          "row": 20,
+          "pausa_depois": 0,
+          "nome": "selecionar item linha 20",
+          "obs": "Clique para SELECIONAR o item na linha 20 (calibração dy)"
+        },
+        {
+          "id": "preencher_taxes.clique_taxes",
+          "ordem": 6,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "botão Taxes",
+          "obs": "Clique no botão Taxes"
+        },
+        {
+          "id": "preencher_taxes.tax_type_1",
+          "ordem": 7,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Tax Type célula 1",
+          "obs": "Mapear sempre (2025 e 2026+). Célula Tax Type 1"
+        },
+        {
+          "id": "preencher_taxes.stat_tax",
+          "ordem": 8,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Stat.TAX",
+          "obs": "Mapear sempre (usado em 2026+: IB2S/CBS1). Clique Stat.TAX"
+        },
+        {
+          "id": "preencher_taxes.value_ini",
+          "ordem": 9,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Value início <",
+          "obs": "INÍCIO da célula Value (para arrastar e selecionar)"
+        },
+        {
+          "id": "preencher_taxes.value_fim",
+          "ordem": 10,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Value fim >",
+          "obs": "FIM da célula Value (para arrastar e selecionar)"
+        },
+        {
+          "id": "preencher_taxes.other_base_1",
+          "ordem": 11,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Other Base 1",
+          "obs": "Other Base célula 1"
+        },
+        {
+          "id": "preencher_taxes.other_base_2",
+          "ordem": 12,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Other Base 2",
+          "obs": "Other Base célula 2"
+        },
+        {
+          "id": "preencher_taxes.other_base_3",
+          "ordem": 13,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Other Base 3",
+          "obs": "Other Base célula 3"
+        },
+        {
+          "id": "preencher_taxes.other_base_4",
+          "ordem": 14,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Other Base 4",
+          "obs": "Other Base célula 4"
+        },
+        {
+          "id": "preencher_taxes.other_base_5",
+          "ordem": 15,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Other Base 5 (2026+)",
+          "obs": "Other Base célula 5 — mapear sempre; só usa se issue date >= 2026"
+        },
+        {
+          "id": "preencher_taxes.other_base_6",
+          "ordem": 16,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Other Base 6 (2026+)",
+          "obs": "Other Base célula 6 — mapear sempre; só usa se issue date >= 2026"
+        },
+        {
+          "id": "preencher_taxes.clique_taxes_ii",
+          "ordem": 17,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Taxes II",
+          "obs": "Clique no botão Taxes II"
+        },
+        {
+          "id": "preencher_taxes.clique_cbs_ibs",
+          "ordem": 18,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "CBS and IBS",
+          "obs": "Clique CBS and IBS (valor vem do Excel col. K; pode ficar vazio)"
+        },
+        {
+          "id": "preencher_taxes.preencher",
+          "ordem": 19,
+          "kind": "fill_taxes",
+          "pausa_depois": 0.4,
+          "nome": "executar Taxes",
+          "obs": "Seleciona N itens → Taxes → tax types → copia Value → Other Base → Taxes II → CBS/IBS"
         }
       ]
     }

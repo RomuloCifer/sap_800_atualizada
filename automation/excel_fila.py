@@ -21,6 +21,7 @@ COL_STATUS = ("status",)
 COL_BATCH = ("batch",)
 COL_ISSUER = ("issuer id", "issuer_id", "issuerid")
 COL_TOTAL = ("total value", "total_value", "totalvalue")
+COL_CBS_IBS = ("cbs/ibs", "cbs ibs", "cbs_ibs", "cbsibs")
 
 
 @dataclass
@@ -31,6 +32,7 @@ class LinhaFila:
     batch: str
     issuer_id: str
     total_value: Optional[str] = None
+    cbs_ibs: Optional[str] = None
 
     def to_contexto(self):
         # type: () -> dict
@@ -40,6 +42,7 @@ class LinhaFila:
             "excel_linha": self.linha,
             "excel_arquivo": str(self.caminho),
             "excel_status": self.status,
+            "cbs_ibs": self.cbs_ibs or "",
         }
         if self.total_value is not None:
             ctx["excel_total_value"] = self.total_value
@@ -132,6 +135,7 @@ def primeira_pendente(caminho=None):
         i_batch = _achar_coluna(headers, COL_BATCH)
         i_issuer = _achar_coluna(headers, COL_ISSUER)
         i_total = _achar_coluna(headers, COL_TOTAL)
+        i_cbs = _achar_coluna(headers, COL_CBS_IBS)
 
         faltando = []
         if i_status is None:
@@ -169,6 +173,9 @@ def primeira_pendente(caminho=None):
             total = None
             if i_total is not None and i_total < len(row):
                 total = _cell_str(row[i_total]) or None
+            cbs = None
+            if i_cbs is not None and i_cbs < len(row):
+                cbs = _cell_str(row[i_cbs]) or None
             return LinhaFila(
                 caminho=path,
                 linha=num,
@@ -176,6 +183,7 @@ def primeira_pendente(caminho=None):
                 batch=batch,
                 issuer_id=issuer,
                 total_value=total,
+                cbs_ibs=cbs,
             )
     finally:
         wb.close()

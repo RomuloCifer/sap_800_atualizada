@@ -10,6 +10,7 @@ Módulo: `automation/excel_fila.py`
 | Filtro da fila | `Status` | **A** |
 | Batch | `Batch` | **D** |
 | Issuer Sap / Partner ID | `Issuer Id` | **R** |
+| CBS and IBS (Taxes) | `CBS/IBS` | **K** |
 | Valor (comparar com XML) | `Total Value` | **T** |
 
 ## Regra da fila

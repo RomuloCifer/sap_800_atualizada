@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import Optional
 
+from automation import abort
 from automation import localmap
 from automation import mapa as catalog
 from automation import runner
@@ -132,7 +133,7 @@ class App(tk.Tk):
 
         self.status = tk.Label(
             self,
-            text="Fluxo: {}\nContagem de {}s antes de rodar.".format(
+            text="Fluxo: {}\nContagem de {}s antes de rodar.\nEsc = parar a automacao (mesmo com SAP em foco).".format(
                 fluxo_txt, DELAY_FOCO_SAP_SEGUNDOS
             ),
             font=("Segoe UI", 9),
@@ -214,28 +215,43 @@ class App(tk.Tk):
     def _countdown_thread_msgs(self, label):
         # type: (str) -> bool
         for resto in range(DELAY_FOCO_SAP_SEGUNDOS, 0, -1):
-            if self._cancel_run:
+            if self._cancel_run or win_mouse.escape_pressed():
                 return False
             self.after(
                 0,
                 lambda r=resto: self.status.config(
-                    text="[{}] Foque o SAP! Começa em {}s…".format(label, r)
+                    text="[{}] Foque o SAP! Começa em {}s… (Esc = parar)".format(
+                        label, r
+                    )
                 ),
             )
-            time.sleep(1)
+            # Sleep em fatias para reagir ao Esc
+            fim = time.time() + 1.0
+            while time.time() < fim:
+                if self._cancel_run or win_mouse.escape_pressed():
+                    return False
+                time.sleep(0.05)
         return not self._cancel_run
 
     def _countdown_foco_sap(self, contexto):
         # type: (str) -> bool
         for resto in range(DELAY_FOCO_SAP_SEGUNDOS, 0, -1):
-            if self._cancel_run:
-                self._set_busy(False, "Cancelado.")
+            if self._cancel_run or win_mouse.escape_pressed():
+                self._set_busy(False, "Cancelado (Esc).")
                 return False
             self.status.config(
-                text="[{}] Foque o SAP! Começa em {}s…".format(contexto, resto)
+                text="[{}] Foque o SAP! Começa em {}s… (Esc = parar)".format(
+                    contexto, resto
+                )
             )
             self.update()
-            time.sleep(1)
+            fim = time.time() + 1.0
+            while time.time() < fim:
+                if self._cancel_run or win_mouse.escape_pressed():
+                    self._set_busy(False, "Cancelado (Esc).")
+                    return False
+                time.sleep(0.05)
+                self.update()
         return True
 
     def _contexto_base(self, usar_excel=False):
@@ -342,11 +358,14 @@ class App(tk.Tk):
                     self.after(0, lambda: self._set_busy(False, "Cancelado."))
                     return
                 self.after(
-                    0, lambda: self.status.config(text="Rodando '{}'…".format(parte))
+                    0, lambda: self.status.config(text="Rodando '{}'… (Esc = parar)".format(parte))
                 )
-                n = runner.executar_parte(parte, texto=None, contexto=ctx)
+                with abort.sessao():
+                    n = runner.executar_parte(parte, texto=None, contexto=ctx)
                 msg = "Concluído: {} passo(s) em '{}'.".format(n, parte)
                 self.after(0, lambda: self._fim_ok(msg))
+            except abort.AbortError as exc:
+                self.after(0, lambda: self._fim_abort(str(exc)))
             except Exception as exc:
                 self.after(0, lambda: self._fim_erro("Iniciar parte", str(exc)))
 
@@ -410,11 +429,12 @@ class App(tk.Tk):
                         ),
                     )
 
-                resultado = runner.executar_fluxo(
-                    texto=None,
-                    contexto=ctx,
-                    on_parte=on_parte,
-                )
+                with abort.sessao():
+                    resultado = runner.executar_fluxo(
+                        texto=None,
+                        contexto=ctx,
+                        on_parte=on_parte,
+                    )
                 partes = " → ".join(resultado.get("_fluxo") or fluxo)
                 msg = (
                     "Fluxo concluído.\n"
@@ -429,6 +449,8 @@ class App(tk.Tk):
                     resultado.get("invoice") or "—",
                 )
                 self.after(0, lambda: self._fim_ok(msg))
+            except abort.AbortError as exc:
+                self.after(0, lambda: self._fim_abort(str(exc)))
             except Exception as exc:
                 self.after(0, lambda: self._fim_erro("Iniciar tudo", str(exc)))
 
@@ -443,6 +465,12 @@ class App(tk.Tk):
         # type: (str, str) -> None
         self._set_busy(False, msg)
         messagebox.showerror(titulo, msg)
+
+    def _fim_abort(self, msg=None):
+        # type: (Optional[str]) -> None
+        texto = msg or "Automacao interrompida (Esc)."
+        self._set_busy(False, texto)
+        messagebox.showwarning("Parado", texto)
 
 
 def run_app():

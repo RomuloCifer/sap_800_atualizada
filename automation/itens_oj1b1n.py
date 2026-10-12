@@ -10,6 +10,7 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+from automation import abort
 from automation import teclado
 from automation import win_mouse
 
@@ -168,6 +169,7 @@ def executar_preenchimento(contexto, pontos, passo=None):
         pausa_linha = float(passo["pausa_depois"])
 
     for idx, item in enumerate(itens):
+        abort.check()
         linha = idx + 1  # grade SAP começa na 1ª linha visível
         if hasattr(item, "codigo"):
             material = item.codigo
@@ -207,11 +209,11 @@ def executar_preenchimento(contexto, pontos, passo=None):
         time.sleep(0.15)
         _digitar_campo(plant)
 
-        time.sleep(pausa_linha)
+        abort.sleep(pausa_linha)
 
     # Após todos os itens: Enter (qtd produtos + 1), 0.6s entre cada
     n_enter = len(itens) + 1
     teclado.pressionar("enter", vezes=n_enter, pausa=0.6, hold=0.05)
-    time.sleep(0.25)
+    abort.sleep(0.25)
 
     return len(itens)

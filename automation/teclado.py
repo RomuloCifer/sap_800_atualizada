@@ -124,9 +124,12 @@ def _tap(nome, hold=0.06):
 
 def pressionar(nome, vezes=1, pausa=0.04, hold=0.06):
     # type: (str, int, float, float) -> None
+    from automation import abort
+
     for _ in range(max(1, int(vezes))):
+        abort.check()
         _tap(nome, hold=hold)
-        time.sleep(max(0.0, float(pausa)))
+        abort.sleep(max(0.0, float(pausa)))
 
 
 def pressionar_lista(nomes, pausa=0.08, hold=0.06):
@@ -161,7 +164,10 @@ def digitar_texto(texto, pausa_char=0.03):
     """Digita caractere a caractere (KEYEVENTF_UNICODE). Usado em kind=type."""
     if texto is None:
         return
+    from automation import abort
+
     for ch in str(texto):
+        abort.check()
         code = ord(ch)
         inp = INPUT(type=INPUT_KEYBOARD)
         inp.ki = KEYBDINPUT(0, code, KEYEVENTF_UNICODE, 0, 0)

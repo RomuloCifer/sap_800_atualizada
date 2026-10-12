@@ -126,6 +126,30 @@ def click(x, y, clicks=1, interval=0.08):
             time.sleep(interval)
 
 
+def drag(x1, y1, x2, y2, steps=12, step_sleep=0.02):
+    # type: (int, int, int, int, int, float) -> None
+    """Arrasta com botão esquerdo pressionado de (x1,y1) até (x2,y2)."""
+    ensure_dpi_awareness()
+    move_to(x1, y1)
+    ax1, ay1 = _to_absolute(x1, y1)
+    flags_abs = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK
+    _send_mouse(MOUSEEVENTF_MOVE | flags_abs, ax1, ay1)
+    time.sleep(0.03)
+    _send_mouse(MOUSEEVENTF_LEFTDOWN | flags_abs, ax1, ay1)
+    time.sleep(0.04)
+    n = max(2, int(steps))
+    for i in range(1, n + 1):
+        t = float(i) / float(n)
+        x = int(round(x1 + (x2 - x1) * t))
+        y = int(round(y1 + (y2 - y1) * t))
+        ax, ay = _to_absolute(x, y)
+        _send_mouse(MOUSEEVENTF_MOVE | flags_abs, ax, ay)
+        time.sleep(max(0.0, float(step_sleep)))
+    ax2, ay2 = _to_absolute(x2, y2)
+    _send_mouse(MOUSEEVENTF_LEFTUP | flags_abs, ax2, ay2)
+    time.sleep(0.05)
+
+
 # Virtual-key codes
 VK_MBUTTON = 0x04  # botão do meio (roda)
 VK_ESCAPE = 0x1B

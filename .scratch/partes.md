@@ -11,6 +11,7 @@ Ordem atual do **Iniciar tudo**:
 3. `abrir_oj1b1n`
 4. `preencher_oj1b1n`
 5. `preencher_itens`
+6. `preencher_taxes`
 
 Para incluir uma parte nova no fim-a-fim: defina em `partes` **e** acrescente o nome em `fluxo`.
 
@@ -95,3 +96,25 @@ O código calcula a **média do dy** entre linhas e usa isso para todas as linha
 10. Ao fim de todos os itens: **Enter** × (quantidade de produtos + 1)
 
 Pontos: 5 âncoras NF Item + 1 Plant.
+
+---
+
+## PREENCHER TAXES (`preencher_taxes`)
+
+### Mapear (sempre mapear Stat.TAX e Other Base 5/6 mesmo em notas 2025)
+
+1. Selecionar item linhas **1, 2, 5, 10, 20** (dy)
+2. Botão **Taxes**
+3. **Tax Type** célula 1 + **Stat.TAX**
+4. Value **início** `<` e **fim** `>` (drag + Ctrl+C)
+5. Other Base **1–6**
+6. **Taxes II** + **CBS and IBS**
+
+### Automação
+
+1. Clica seleção nos **N** itens preenchidos
+2. Clique Taxes
+3. Se **issue date ≥ 01.01.2026**: Tax Type → `IB2S` → Stat.TAX → Enter×2 → `CBS1` → Stat.TAX → Enter×2 → depois `ICOF`/`ICM0`/`IPIS`/`IPI0` (sem novo clique Tax Type)
+4. Se **2025-**: Tax Type → `ICOF` → Enter×2 → `ICM0` → … → `IPI0`
+5. Drag Value → Ctrl+C → cola Other Base **de baixo pra cima** (2025: 4→1; 2026+: 6→1) → Enter×2
+6. Taxes II → CBS and IBS (Excel col. **K** `CBS/IBS`; vazio = só clique)

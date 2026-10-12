@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, Optional
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 
+from automation import abort
 from automation import kinds
 from automation import localmap
 from automation import mapa as catalog
@@ -165,6 +166,12 @@ def _executar_passo(passo, texto, pontos, contexto=None, pedir_texto=False):
         itens_oj1b1n.executar_preenchimento(contexto, pontos, passo=passo)
         return
 
+    if kind == "fill_taxes":
+        from automation import taxes_oj1b1n
+
+        taxes_oj1b1n.executar_preenchimento(contexto, pontos, passo=passo)
+        return
+
     if kind in kinds.KINDS_COM_XY:
         x, y = localmap.resolve_xy(pid, pontos)
         if kind == "click":
@@ -207,10 +214,11 @@ def executar_parte(nome_parte, texto=None, pausa_entre=0.35, contexto=None):
     pontos = localmap.load_pontos()
     executados = 0
     for passo in passos:
+        abort.check()
         catalog.validar_passo(passo)
         _executar_passo(passo, texto, pontos, contexto=contexto, pedir_texto=False)
         executados += 1
-        time.sleep(pausa_depois_do_passo(passo, pausa_entre))
+        abort.sleep(pausa_depois_do_passo(passo, pausa_entre))
 
     return executados
 
@@ -270,6 +278,7 @@ def executar_fluxo(texto=None, contexto=None, pausa_entre=0.35, on_parte=None):
 
     total_passos = 0
     for nome in fluxo:
+        abort.check()
         if on_parte is not None:
             on_parte(nome)
         # Não passa mais `texto` solto — evita colar batch/issuer no campo errado

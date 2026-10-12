@@ -8,6 +8,7 @@ import time
 import traceback
 from typing import List, Optional
 
+from automation import abort
 from automation import localmap
 from automation import mapa as catalog
 from automation import runner
@@ -18,7 +19,10 @@ from automation.app_ui import DELAY_FOCO_SAP_SEGUNDOS
 def _countdown(segundos, label):
     # type: (int, str) -> None
     for resto in range(segundos, 0, -1):
-        print("[{}] Foque o SAP! Comeca em {}s...".format(label, resto), flush=True)
+        print(
+            "[{}] Foque o SAP! Comeca em {}s... (Esc = parar)".format(label, resto),
+            flush=True,
+        )
         time.sleep(1)
 
 
@@ -118,7 +122,8 @@ def cmd_fluxo(args):
     def on_parte(nome):
         print(">>> Rodando parte: {}".format(nome), flush=True)
 
-    resultado = runner.executar_fluxo(texto=None, contexto=ctx, on_parte=on_parte)
+    with abort.sessao():
+        resultado = runner.executar_fluxo(texto=None, contexto=ctx, on_parte=on_parte)
     print("OK - fluxo concluido.")
     print("  passos:", resultado.get("_total_passos"))
     print("  filial XML:", resultado.get("recipient_filial"))
@@ -141,7 +146,8 @@ def cmd_parte(args):
         return 2
     _countdown(args.delay, "Parte")
     print(">>> Rodando parte: {}".format(nome), flush=True)
-    n = runner.executar_parte(nome, texto=None, contexto=ctx)
+    with abort.sessao():
+        n = runner.executar_parte(nome, texto=None, contexto=ctx)
     print("OK - {} passo(s).".format(n))
     return 0
 
@@ -237,6 +243,10 @@ def run_cli(argv=None):
 
     try:
         return int(args.func(args))
+    except abort.AbortError as exc:
+        print()
+        print("PARADO:", exc, file=sys.stderr)
+        return 130
     except Exception as exc:
         print()
         print("========== ERRO ==========", file=sys.stderr)
