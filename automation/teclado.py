@@ -16,6 +16,7 @@ KEYEVENTF_UNICODE = 0x0004
 # Virtual-key codes
 _VK = {
     "f3": 0x72,
+    "f4": 0x73,
     "f6": 0x75,
     "f9": 0x78,
     "f10": 0x79,

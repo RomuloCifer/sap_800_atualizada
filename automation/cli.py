@@ -101,6 +101,53 @@ def cmd_excel(args):
 
 def cmd_fluxo(args):
     # type: (argparse.Namespace) -> int
+    usar_excel = bool(getattr(args, "excel", False) or getattr(args, "excel_path", None))
+    # Padrao: 1 Pendente por vez. Fila so com --fila.
+    modo_fila = usar_excel and bool(getattr(args, "fila", False))
+
+    if modo_fila:
+        from automation import fila as fila_mod
+
+        print("Modo FILA Excel (todos Status=Pendente)")
+        print("  Status ok  -> teste_ok + Alt+F4 + clique foco")
+        print("  Status err -> teste_erro + tenta fechar e segue")
+        print("  Esc = parar a fila")
+        print("Fluxo:", " -> ".join(catalog.listar_fluxo()))
+        print("Feche o Excel na planilha antes (grava Status).")
+        _countdown(args.delay, "Fila")
+
+        def on_item(linha, n):
+            print(
+                "=== #{} linha={} batch={} issuer={} cbs={!r}".format(
+                    n, linha.linha, linha.batch, linha.issuer_id, linha.cbs_ibs or ""
+                ),
+                flush=True,
+            )
+
+        def on_parte(nome):
+            print(">>> Rodando parte: {}".format(nome), flush=True)
+
+        with abort.sessao():
+            resumo = fila_mod.executar_fila(
+                caminho_excel=getattr(args, "excel_path", None),
+                on_item=on_item,
+                on_parte=on_parte,
+            )
+        print("FILA encerrada.")
+        print("  ok:", resumo.get("ok"))
+        print("  erro:", resumo.get("erro"))
+        print("  abortado:", resumo.get("abortado"))
+        for it in resumo.get("processados") or []:
+            print(
+                "  - linha {} batch {} -> {} {}".format(
+                    it.get("linha"),
+                    it.get("batch"),
+                    it.get("status"),
+                    it.get("erro") or "",
+                )
+            )
+        return 130 if resumo.get("abortado") else (1 if resumo.get("erro") else 0)
+
     ctx = _carregar_excel_se_pedido(args)
     fluxo = catalog.listar_fluxo()
     if "abrir_batch" in fluxo and not ctx.get("batch"):
@@ -213,6 +260,11 @@ def build_parser():
 
     s_fluxo = sub.add_parser("fluxo", help="Roda o fluxo completo")
     _add_run_args(s_fluxo)
+    s_fluxo.add_argument(
+        "--fila",
+        action="store_true",
+        help="Com --excel: processa todos Pendente em loop (teste_ok/teste_erro)",
+    )
     s_fluxo.set_defaults(func=cmd_fluxo)
 
     s_parte = sub.add_parser("parte", help="Roda uma parte")

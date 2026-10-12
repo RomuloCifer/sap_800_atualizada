@@ -131,8 +131,21 @@ Pontos: 5 âncoras NF Item + 1 Plant.
 1. Clique **NF-e Data**
 2. Clique **Protocol No.** → `protocol_number` (nProt)
 3. Tab → **Proc Date** (`protocol_date`)
-4. Tab → Backspace×8 → **Proc Time** (`protocol_time`)
+4. Tab → **Proc Time** (`protocol_time`) — digita direto
 5. Tab×3 → **Random No.** = 8 dígitos do fim da chave (`…140033194` → `14003319`)
 6. Tab → Delete → último dígito da chave (`4`)
 
 Pontos a mapear: `valor_ini`, `valor_fim`, `clique_nfe_data`, `clique_protocol_no`.
+
+---
+
+## ENTRE BATCHES (`entre_batches`) — só fila Excel
+
+Não entra no `fluxo`. Usado após cada nota na fila:
+
+1. **Alt+F4** fecha a janela atual  
+2. **1 clique** mapeado aqui para focar o SAP de novo  
+
+Status Excel: sucesso → `teste_ok`; erro/valor divergente → `teste_erro`.
+
+Mapear uma vez a parte `entre_batches`. **Feche o Excel** enquanto a fila grava Status.

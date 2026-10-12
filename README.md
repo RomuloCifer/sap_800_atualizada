@@ -73,6 +73,16 @@ Tempos opcionais no passo: `pausa` (entre teclas do mesmo passo) e `pausa_depois
 
 Detalhes: `.scratch/partes.md`.
 
+## Excel (1 por vez — padrão)
+
+```powershell
+python main.py fluxo --excel
+```
+
+Pega a 1ª linha `Pendente`. A pessoa acompanha; **Esc** para se der erro.
+
+Fila automática (opcional): marque “Fila automática” na tela ou `python main.py fluxo --excel --fila`.
+
 ## Parar a automação
 
 Durante o fluxo ou uma parte: aperte **Esc** (funciona mesmo com o SAP em foco).

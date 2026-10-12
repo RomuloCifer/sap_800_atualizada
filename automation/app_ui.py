@@ -25,8 +25,8 @@ class App(tk.Tk):
         win_mouse.ensure_dpi_awareness()
 
         self.title("SAP 800 ATT")
-        self.geometry("440x420")
-        self.minsize(400, 400)
+        self.geometry("460x470")
+        self.minsize(420, 450)
         self.configure(bg="#f4f4f4")
 
         self._busy = False
@@ -80,8 +80,17 @@ class App(tk.Tk):
         self.excel_var = tk.BooleanVar(value=True)
         tk.Checkbutton(
             self,
-            text="Usar Excel (1a linha Status = Pendente)",
+            text="Usar Excel (Status = Pendente)",
             variable=self.excel_var,
+            bg="#f4f4f4",
+            activebackground="#f4f4f4",
+        ).pack(anchor="w", padx=16, pady=2)
+
+        self.fila_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(
+            self,
+            text="Fila automática (todos Pendente — opcional)",
+            variable=self.fila_var,
             bg="#f4f4f4",
             activebackground="#f4f4f4",
         ).pack(anchor="w", padx=16, pady=2)
@@ -381,8 +390,15 @@ class App(tk.Tk):
             messagebox.showerror("Iniciar tudo", str(exc))
             return
 
+        usar_excel = bool(self.excel_var.get())
+        modo_fila = usar_excel and bool(self.fila_var.get())
+
+        if modo_fila:
+            self._iniciar_fila()
+            return
+
         try:
-            ctx = self._contexto_base(usar_excel=bool(self.excel_var.get()))
+            ctx = self._contexto_base(usar_excel=usar_excel)
         except Exception as exc:
             messagebox.showerror("Iniciar tudo", str(exc))
             return
@@ -454,6 +470,85 @@ class App(tk.Tk):
                 self.after(0, lambda: self._fim_abort(str(exc)))
             except Exception as exc:
                 self.after(0, lambda: self._fim_erro("Iniciar tudo", str(exc)))
+
+        threading.Thread(target=trabalho, daemon=True).start()
+
+    def _iniciar_fila(self):
+        # type: () -> None
+        from automation import fila as fila_mod
+        from automation.excel_fila import resolver_arquivo_excel
+
+        faltam_foco = localmap.ids_faltando("entre_batches")
+        if faltam_foco:
+            messagebox.showerror(
+                "Fila",
+                "Mapeie a parte 'entre_batches' (clique de foco após Alt+F4).\n"
+                "Faltam: {}".format(", ".join(faltam_foco)),
+            )
+            return
+
+        try:
+            path = resolver_arquivo_excel()
+        except Exception as exc:
+            messagebox.showerror("Fila", str(exc))
+            return
+
+        self._cancel_run = False
+        self._set_busy(
+            True,
+            "Fila Excel… {} (Esc = parar). Feche o Excel na planilha.".format(path.name),
+        )
+
+        def trabalho():
+            try:
+                if not self._countdown_thread_msgs("Fila"):
+                    self.after(0, lambda: self._set_busy(False, "Cancelado."))
+                    return
+
+                def on_item(linha, n):
+                    self.after(
+                        0,
+                        lambda: self.status.config(
+                            text="Fila #{} linha={} batch={}… (Esc = parar)".format(
+                                n, linha.linha, linha.batch
+                            )
+                        ),
+                    )
+
+                def on_parte(nome):
+                    self.after(
+                        0,
+                        lambda n=nome: self.status.config(
+                            text="Fila: parte '{}'… (Esc = parar)".format(n)
+                        ),
+                    )
+
+                with abort.sessao():
+                    resumo = fila_mod.executar_fila(
+                        caminho_excel=str(path),
+                        on_item=on_item,
+                        on_parte=on_parte,
+                    )
+                msg = (
+                    "Fila encerrada.\n"
+                    "OK (teste_ok): {}\n"
+                    "Erro (teste_erro): {}\n"
+                    "Abortado (Esc): {}\n"
+                    "Arquivo: {}"
+                ).format(
+                    resumo.get("ok"),
+                    resumo.get("erro"),
+                    resumo.get("abortado"),
+                    path.name,
+                )
+                if resumo.get("abortado"):
+                    self.after(0, lambda: self._fim_abort(msg))
+                else:
+                    self.after(0, lambda: self._fim_ok(msg))
+            except abort.AbortError as exc:
+                self.after(0, lambda: self._fim_abort(str(exc)))
+            except Exception as exc:
+                self.after(0, lambda: self._fim_erro("Fila", str(exc)))
 
         threading.Thread(target=trabalho, daemon=True).start()
 

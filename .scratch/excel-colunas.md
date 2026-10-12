@@ -17,6 +17,8 @@ Módulo: `automation/excel_fila.py`
 
 - Pega a **primeira** linha cujo `Status` (trim, case-insensitive) é exatamente **`Pendente`**.
 - Não pega textos tipo `Enviados setembro - pendente revisão`.
+- Padrão: **1 Pendente por vez** (`fluxo --excel`).
+- Fila automática (opcional, `--fila`): sucesso → **`teste_ok`**; erro → **`teste_erro`**. Feche o Excel na planilha ao gravar Status.
 
 ## Como rodar
 

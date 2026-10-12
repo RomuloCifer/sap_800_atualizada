@@ -15,6 +15,8 @@ ROOT = Path(__file__).resolve().parent.parent
 EXCEL_DIR = ROOT / "excel"
 
 STATUS_ALVO = "pendente"
+STATUS_OK = "teste_ok"
+STATUS_ERRO = "teste_erro"
 
 # Nomes aceitos no cabeçalho (case-insensitive)
 COL_STATUS = ("status",)
@@ -218,3 +220,38 @@ def ler_cbs_ibs_linha(caminho, linha_1based):
     finally:
         wb.close()
     return ""
+
+
+def atualizar_status(caminho, linha_1based, novo_status):
+    # type: (Union[str, Path], int, str) -> None
+    """
+    Grava Status na linha (1-based).
+    Feche o Excel na planilha antes — arquivo aberto trava a gravação.
+    """
+    import openpyxl
+
+    path = Path(caminho)
+    if not path.is_file():
+        raise FileNotFoundError("Excel nao encontrado: {}".format(path))
+
+    wb = openpyxl.load_workbook(path)
+    try:
+        ws = wb.active
+        header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True))
+        headers = [_norm_header(h) for h in header_row]
+        i_status = _achar_coluna(headers, COL_STATUS)
+        if i_status is None:
+            raise RuntimeError("Coluna Status nao encontrada em {}.".format(path.name))
+        ws.cell(row=int(linha_1based), column=i_status + 1, value=str(novo_status))
+        wb.save(path)
+    finally:
+        wb.close()
+
+
+def tem_pendente(caminho=None):
+    # type: (Union[str, Path, None]) -> bool
+    try:
+        primeira_pendente(caminho)
+        return True
+    except RuntimeError:
+        return False
