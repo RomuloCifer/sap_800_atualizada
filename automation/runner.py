@@ -212,9 +212,14 @@ def _apos_parte(nome_parte, contexto):
         from automation.xml_nfe import parse_nfe_clipboard
 
         dados = parse_nfe_clipboard()
+        invoice_digitos = "".join(c for c in str(dados.invoice or "") if c.isdigit())
+        serie_digitos = "".join(c for c in str(dados.serie or "") if c.isdigit())
         contexto["recipient_filial"] = dados.recipient_filial
         contexto["recipient_sufixo"] = dados.recipient_sufixo
         contexto["invoice"] = dados.invoice
+        contexto["invoice_9"] = invoice_digitos.zfill(9)  # 3319 → 000003319
+        contexto["serie"] = dados.serie
+        contexto["serie_3"] = serie_digitos.zfill(3)  # 4 → 004
         contexto["valor"] = dados.valor
         contexto["valor_fmt"] = dados.valor_fmt
         contexto["cfop"] = dados.cfop

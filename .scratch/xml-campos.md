@@ -8,6 +8,9 @@ Parser: `automation/xml_nfe.py`
 | Campo pedido | Valor esperado | Origem XML |
 |--------------|----------------|------------|
 | invoice | `3319` | `ide/nNF` |
+| invoice_9 | `000003319` | `nNF` com zeros à esquerda (9 dígitos) — Nine-Digit No |
+| serie | `4` | `ide/serie` |
+| serie_3 | `004` | `serie` com zeros à esquerda (3 dígitos) |
 | recipient (completo) | `00.907.845/0015-60` | `dest/CNPJ` formatado |
 | recipient (sufixo) | `0015-60` | últimos 6 dígitos do CNPJ |
 | recipient (filial) | `0015` | 4 dígitos da filial (`BBBB` em `…/BBBB-CC`) — **Business Place** em OJ1B1N |

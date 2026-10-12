@@ -4,7 +4,8 @@
   "fluxo": [
     "abrir_batch",
     "pegar_xml",
-    "abrir_oj1b1n"
+    "abrir_oj1b1n",
+    "preencher_oj1b1n"
   ],
   "partes": {
     "abrir_batch": {
@@ -64,9 +65,9 @@
           "id": "abrir_batch.clique_lapis_azul",
           "ordem": 6,
           "kind": "click",
-          "pausa_depois": 1.0,
+          "pausa_depois": 1.5,
           "nome": "lápis azul",
-          "obs": "1 clique no lápis azul; espera 1s"
+          "obs": "1 clique no lápis azul; espera 1.5s antes do pegar_xml"
         }
       ]
     },
@@ -136,7 +137,6 @@
           "nome": "clicar em campo onde escrever",
           "obs": "1 clique no campo onde escrever (/oj1b1n)"
         },
-
         {
           "id": "abrir_oj1b1n.escrever_tcode",
           "ordem": 2,
@@ -153,93 +153,140 @@
           "keys": ["enter"],
           "pausa_depois": 1.0,
           "nome": "enter após tcode",
-          "obs": "Enter após /oj1b1n"
-        },
-        {
-          "id": "abrir_oj1b1n.clique_nf_type",
-          "ordem": 4,
-          "kind": "click",
-          "pausa_depois": 0.5,
-          "nome": "Nota Fiscal Type",
-          "obs": "1 clique no campo Nota Fiscal Type"
+          "obs": "Enter após /oj1b1n; espera 1s a tela carregar"
         },
         {
           "id": "abrir_oj1b1n.escrever_x0",
-          "ordem": 5,
+          "ordem": 4,
           "kind": "type",
           "text": "X0",
-          "pausa_depois": 0.3,
+          "pausa_depois": 0.25,
           "nome": "escrever X0",
-          "obs": "Escrever X0"
+          "obs": "Nota Fiscal Type = X0 (foco já no primeiro campo)"
         },
         {
-          "id": "abrir_oj1b1n.clique_business_place",
-          "ordem": 6,
-          "kind": "click",
-          "pausa_depois": 0.5,
-          "nome": "Business Place",
-          "obs": "1 clique no campo Business Place"
+          "id": "abrir_oj1b1n.tab_ate_business_place",
+          "ordem": 5,
+          "kind": "keys",
+          "keys": ["tab", "tab"],
+          "pausa": 0.2,
+          "pausa_depois": 0.35,
+          "nome": "Tab×2 até Business Place",
+          "obs": "Tab duas vezes com pequena espera entre elas"
         },
         {
           "id": "abrir_oj1b1n.escrever_recipient_filial",
-          "ordem": 7,
+          "ordem": 6,
           "kind": "type",
           "text_from": "recipient_filial",
-          "pausa_depois": 0.5,
+          "pausa_depois": 0.25,
           "nome": "Business Place = filial recipient",
-          "obs": "Só a filial do CNPJ (ex.: 0015 de 00.907.845/0015-60). Vem do XML."
+          "obs": "Filial do CNPJ (ex.: 0015). Vem do XML."
         },
         {
-          "id": "abrir_oj1b1n.clique_nf_partner_function",
+          "id": "abrir_oj1b1n.tab_partner_function",
+          "ordem": 7,
+          "kind": "keys",
+          "keys": ["tab"],
+          "pausa_depois": 0.35,
+          "nome": "Tab até Partner Function",
+          "obs": "Tab após Business Place"
+        },
+        {
+          "id": "abrir_oj1b1n.escrever_v",
           "ordem": 8,
-          "kind": "click",
-          "pausa_depois": 0.4,
-          "nome": "NF Partner Function",
-          "obs": "1 clique em NF Partner Function"
+          "kind": "type",
+          "text": "V",
+          "pausa_depois": 0.25,
+          "nome": "escrever V",
+          "obs": "NF Partner Function = V"
         },
         {
-          "id": "abrir_oj1b1n.tecla_v",
+          "id": "abrir_oj1b1n.tab_partner_id",
           "ordem": 9,
           "kind": "keys",
-          "keys": ["v"],
-          "pausa_depois": 0.3,
-          "nome": "tecla V",
-          "obs": "Tecla V seleciona a opção correta"
-        },
-        {
-          "id": "abrir_oj1b1n.enter_partner_function",
-          "ordem": 10,
-          "kind": "keys",
-          "keys": ["enter"],
-          "pausa_depois": 0.5,
-          "nome": "enter Partner Function",
-          "obs": "Enter após V"
-        },
-        {
-          "id": "abrir_oj1b1n.clique_partner_id",
-          "ordem": 11,
-          "kind": "click",
-          "pausa_depois": 0.5,
-          "nome": "Partner ID",
-          "obs": "1 clique em Partner ID"
+          "keys": ["tab"],
+          "pausa": 0.25,
+          "hold": 0.08,
+          "pausa_depois": 0.55,
+          "nome": "Tab até Partner ID",
+          "obs": "Tab após V (um pouco mais lento)"
         },
         {
           "id": "abrir_oj1b1n.escrever_issuer_id",
-          "ordem": 12,
+          "ordem": 10,
           "kind": "type",
           "text_from": "issuer_id",
-          "pausa_depois": 0.3,
+          "pausa_depois": 0.25,
           "nome": "Partner ID = Issuer Id",
-          "obs": "Issuer Id do Excel (coluna R). Lógica Excel ainda não ligada."
+          "obs": "Issuer Id do Excel (coluna R)"
         },
         {
           "id": "abrir_oj1b1n.enter_partner_id",
-          "ordem": 13,
+          "ordem": 11,
           "kind": "keys",
           "keys": ["enter"],
           "pausa_depois": 0.5,
           "nome": "enter Partner ID",
-          "obs": "Enter após Partner ID"
+          "obs": "Enter após Partner ID — fim da parte"
+        }
+      ]
+    },
+    "preencher_oj1b1n": {
+      "titulo": "Preencher OJ1B1N",
+      "passos": [
+        {
+          "id": "preencher_oj1b1n.clique_nine_digit",
+          "ordem": 1,
+          "kind": "click",
+          "pausa_depois": 0.4,
+          "nome": "Nine-Digit No",
+          "obs": "1 clique no campo Nine-Digit No"
+        },
+        {
+          "id": "preencher_oj1b1n.escrever_invoice_9",
+          "ordem": 2,
+          "kind": "type",
+          "text_from": "invoice_9",
+          "pausa_depois": 0.25,
+          "nome": "invoice 9 dígitos",
+          "obs": "nNF com zeros à esquerda (3319 → 000003319)"
+        },
+        {
+          "id": "preencher_oj1b1n.tab_serie",
+          "ordem": 3,
+          "kind": "keys",
+          "keys": ["tab"],
+          "pausa_depois": 0.3,
+          "nome": "Tab até série",
+          "obs": "Tab após Nine-Digit No"
+        },
+        {
+          "id": "preencher_oj1b1n.escrever_serie",
+          "ordem": 4,
+          "kind": "type",
+          "text_from": "serie_3",
+          "pausa_depois": 0.25,
+          "nome": "série 3 dígitos",
+          "obs": "serie do XML com zeros (4 → 004)"
+        },
+        {
+          "id": "preencher_oj1b1n.tab_issue_date",
+          "ordem": 5,
+          "kind": "keys",
+          "keys": ["tab"],
+          "pausa_depois": 0.3,
+          "nome": "Tab até Issue Date",
+          "obs": "Tab após série"
+        },
+        {
+          "id": "preencher_oj1b1n.escrever_issue_date",
+          "ordem": 6,
+          "kind": "type",
+          "text_from": "issue_date",
+          "pausa_depois": 0.4,
+          "nome": "Issue Date",
+          "obs": "dhEmi formatado DD.MM.YYYY (ex.: 13.11.2025)"
         }
       ]
     }

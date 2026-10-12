@@ -7,8 +7,9 @@ Espelho do que está em `mapa_passos.json`. Se divergir, o JSON manda para o có
 Ordem atual do **Iniciar tudo**:
 
 1. `abrir_batch`
-2. `pegar_xml` → depois parse do clipboard (`recipient_filial`, invoice, valor…)
+2. `pegar_xml` → depois parse do clipboard (`recipient_filial`, invoice, serie, valor…)
 3. `abrir_oj1b1n`
+4. `preencher_oj1b1n`
 
 Para incluir uma parte nova no fim-a-fim: defina em `partes` **e** acrescente o nome em `fluxo`.
 
@@ -42,21 +43,30 @@ Ponto a mapear: `pegar_xml.clique_info_xml`.
 
 ## ABRIR OJ1B1N (`abrir_oj1b1n`)
 
+Navegação por **Tab** (sem cliques nos campos da tela OJ1B1N):
+
 1. **1 clique** em campo onde escrever → `click` (`abrir_oj1b1n.clique_campo_escrever`)
-2. Escrever `/oj1b1n` → `type` + `text: /oj1b1n`
-3. **Enter** → `keys`
-4. **1 clique** Nota Fiscal Type → `click`
-5. Escrever `X0` → `type` + `text: X0`
-6. **1 clique** Business Place → `click`
-7. Escrever **filial do recipient** → `type` + `text_from: recipient_filial`  
-   Ex.: CNPJ `00.907.845/0015-60` → escreve **`0015`** (4 dígitos da filial; pode ser 0001, 0016, etc.)
-8. **1 clique** NF Partner Function → `click`
-9. Tecla **V** → `keys`
-10. **Enter** → `keys`
-11. **1 clique** Partner ID → `click`
-12. Escrever **Issuer Id** → `type` + `text_from: issuer_id` (Excel col. R; lógica ainda não ligada)
-13. **Enter** → `keys`
+2. Escrever `/oj1b1n` → `type`
+3. **Enter** → espera **1s**
+4. Escrever `X0` → `type` (foco já no NF Type)
+5. **Tab×2** → Business Place
+6. Escrever **filial** → `text_from: recipient_filial` (ex.: `0015`)
+7. **Tab** → escrever `V` (Partner Function)
+8. **Tab** → Partner ID
+9. Escrever **Issuer Id** → `text_from: issuer_id` (Excel col. R)
+10. **Enter** → fim da parte
 
-Pontos a mapear: campo onde escrever, NF Type, Business Place, Partner Function, Partner ID.
+Ponto a mapear: só `clique_campo_escrever`.
 
-No **Mapear**, se `recipient_filial` / `issuer_id` ainda não estiverem no contexto, a tela pergunta o valor na hora.
+---
+
+## PREENCHER OJ1B1N (`preencher_oj1b1n`)
+
+1. **1 clique** Nine-Digit No → `click`
+2. Escrever **invoice 9 dígitos** → `text_from: invoice_9` (3319 → `000003319`)
+3. **Tab** → série
+4. Escrever **série 3 dígitos** → `text_from: serie_3` (XML `serie` 4 → `004`)
+5. **Tab** → Issue Date
+6. Escrever **issue_date** → `text_from: issue_date` (`DD.MM.YYYY`, ex.: `13.11.2025`)
+
+Ponto a mapear: `preencher_oj1b1n.clique_nine_digit`.

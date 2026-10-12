@@ -61,7 +61,8 @@ Tempos opcionais no passo: `pausa` (entre teclas do mesmo passo) e `pausa_depois
 
 - `abrir_batch` — F3×2 → clique batch → delete×10 → colar → relógio → lápis
 - `pegar_xml` — F6 → Ctrl+F6 → clique XML → Ctrl+A → Ctrl+C → F3
-- `abrir_oj1b1n` — `/oj1b1n` → X0 → Business Place (filial) → Partner Function (V) → Partner ID (Issuer Id)
+- `abrir_oj1b1n` — `/oj1b1n` → Enter → X0 → Tab×2 → filial → Tab → V → Tab → Partner ID → Enter
+- `preencher_oj1b1n` — Nine-Digit No (`000003319`) → Tab → série (`004`) → Tab → issue date
 
 Detalhes: `.scratch/partes.md`.
 
