@@ -172,6 +172,12 @@ def _executar_passo(passo, texto, pontos, contexto=None, pedir_texto=False):
         taxes_oj1b1n.executar_preenchimento(contexto, pontos, passo=passo)
         return
 
+    if kind == "verify_valor":
+        from automation import valor_check
+
+        valor_check.verificar_valor(contexto, pontos, passo=passo)
+        return
+
     if kind in kinds.KINDS_COM_XY:
         x, y = localmap.resolve_xy(pid, pontos)
         if kind == "click":

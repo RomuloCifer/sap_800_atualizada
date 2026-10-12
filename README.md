@@ -55,6 +55,7 @@ Novas partes no fluxo: acrescente o nome em `"fluxo"` no `mapa_passos.json`.
 - `map_only` — só calibração no Mapear (fluxo ignora)
 - `fill_itens` — preenche linhas de item a partir do XML
 - `fill_taxes` — seleção de itens + Taxes / Other Base / CBS-IBS
+- `verify_valor` — confere valor da tela (drag) com XML e Excel (±2 centavos)
 - `keys` / `hotkey` / `paste` / `type` — automáticos, sem mapear
 - `user_action` — pede o usuário e espera OK
 
@@ -68,7 +69,7 @@ Tempos opcionais no passo: `pausa` (entre teclas do mesmo passo) e `pausa_depois
 - `preencher_oj1b1n` — Nine-Digit No (`000003319`) → Tab → série (`004`) → Tab → issue date
 - `preencher_itens` — âncoras de linha (Mapear) → por item: `1` + material/desc/qtd/preço + CFOP/AA + impostos + Plant
 - `preencher_taxes` — seleciona N itens → Taxes → Value → Other Base → Taxes II → CBS/IBS → E matemático
-- `preencher_nfe_data` — Protocol No/Date/Time + Random No (da chave) + DV
+- `preencher_nfe_data` — confere valor (±2¢) → Protocol No/Date/Time + Random No + DV
 
 Detalhes: `.scratch/partes.md`.
 

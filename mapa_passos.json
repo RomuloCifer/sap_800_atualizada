@@ -542,8 +542,33 @@
       "titulo": "Preencher NF-e Data",
       "passos": [
         {
-          "id": "preencher_nfe_data.clique_nfe_data",
+          "id": "preencher_nfe_data.valor_ini",
           "ordem": 1,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Valor início <<",
+          "obs": "INÍCIO do valor na tela (arrastar para copiar e conferir)"
+        },
+        {
+          "id": "preencher_nfe_data.valor_fim",
+          "ordem": 2,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "Valor fim >>",
+          "obs": "FIM do valor na tela (arrastar para copiar e conferir)"
+        },
+        {
+          "id": "preencher_nfe_data.verificar_valor",
+          "ordem": 3,
+          "kind": "verify_valor",
+          "tol": 0.02,
+          "pausa_depois": 0.3,
+          "nome": "conferir valor tela × XML × Excel",
+          "obs": "Copia o valor (drag) e compara com XML e Total Value; tol. 2 centavos"
+        },
+        {
+          "id": "preencher_nfe_data.clique_nfe_data",
+          "ordem": 4,
           "kind": "click",
           "pausa_depois": 0.5,
           "nome": "NF-e Data",
@@ -551,7 +576,7 @@
         },
         {
           "id": "preencher_nfe_data.clique_protocol_no",
-          "ordem": 2,
+          "ordem": 5,
           "kind": "click",
           "pausa_depois": 0.35,
           "nome": "Protocol No.",
@@ -559,7 +584,7 @@
         },
         {
           "id": "preencher_nfe_data.escrever_protocol_no",
-          "ordem": 3,
+          "ordem": 6,
           "kind": "type",
           "text_from": "protocol_number",
           "pausa_depois": 0.25,
@@ -568,7 +593,7 @@
         },
         {
           "id": "preencher_nfe_data.tab_proc_date",
-          "ordem": 4,
+          "ordem": 7,
           "kind": "keys",
           "keys": ["tab"],
           "pausa_depois": 0.25,
@@ -577,7 +602,7 @@
         },
         {
           "id": "preencher_nfe_data.escrever_proc_date",
-          "ordem": 5,
+          "ordem": 8,
           "kind": "type",
           "text_from": "protocol_date",
           "pausa_depois": 0.25,
@@ -586,7 +611,7 @@
         },
         {
           "id": "preencher_nfe_data.tab_proc_time",
-          "ordem": 6,
+          "ordem": 9,
           "kind": "keys",
           "keys": ["tab"],
           "pausa_depois": 0.25,
@@ -595,7 +620,7 @@
         },
         {
           "id": "preencher_nfe_data.apagar_proc_time",
-          "ordem": 7,
+          "ordem": 10,
           "kind": "keys",
           "keys": ["backspace"],
           "repeat": 8,
@@ -607,7 +632,7 @@
         },
         {
           "id": "preencher_nfe_data.escrever_proc_time",
-          "ordem": 8,
+          "ordem": 11,
           "kind": "type",
           "text_from": "protocol_time",
           "pausa_depois": 0.25,
@@ -616,7 +641,7 @@
         },
         {
           "id": "preencher_nfe_data.tabs_random_no",
-          "ordem": 9,
+          "ordem": 12,
           "kind": "keys",
           "keys": ["tab", "tab", "tab"],
           "pausa": 0.2,
@@ -626,7 +651,7 @@
         },
         {
           "id": "preencher_nfe_data.escrever_random_no",
-          "ordem": 10,
+          "ordem": 13,
           "kind": "type",
           "text_from": "random_no",
           "pausa_depois": 0.25,
@@ -635,7 +660,7 @@
         },
         {
           "id": "preencher_nfe_data.tab_random_dv",
-          "ordem": 11,
+          "ordem": 14,
           "kind": "keys",
           "keys": ["tab"],
           "pausa_depois": 0.25,
@@ -644,7 +669,7 @@
         },
         {
           "id": "preencher_nfe_data.delete_dv",
-          "ordem": 12,
+          "ordem": 15,
           "kind": "keys",
           "keys": ["delete"],
           "pausa_depois": 0.15,
@@ -653,7 +678,7 @@
         },
         {
           "id": "preencher_nfe_data.escrever_random_dv",
-          "ordem": 13,
+          "ordem": 16,
           "kind": "type",
           "text_from": "random_dv",
           "pausa_depois": 0.4,

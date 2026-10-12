@@ -127,6 +127,7 @@ Pontos: 5 âncoras NF Item + 1 Plant.
 
 ## PREENCHER NF-e DATA (`preencher_nfe_data`)
 
+0. **Conferir valor** (antes de NF-e Data): mapear início `<<` e fim `>>` → drag + Ctrl+C → compara tela × XML × Excel (`Total Value`); tolerância **2 centavos**. Se divergir, para o fluxo.
 1. Clique **NF-e Data**
 2. Clique **Protocol No.** → `protocol_number` (nProt)
 3. Tab → **Proc Date** (`protocol_date`)
@@ -134,4 +135,4 @@ Pontos: 5 âncoras NF Item + 1 Plant.
 5. Tab×3 → **Random No.** = 8 dígitos do fim da chave (`…140033194` → `14003319`)
 6. Tab → Delete → último dígito da chave (`4`)
 
-Pontos a mapear: `clique_nfe_data`, `clique_protocol_no`.
+Pontos a mapear: `valor_ini`, `valor_fim`, `clique_nfe_data`, `clique_protocol_no`.
