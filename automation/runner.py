@@ -141,7 +141,22 @@ def _executar_passo(passo, texto, pontos, contexto=None, pedir_texto=False):
         lista = list(passo.get("keys") or [])
         if len(lista) < 2:
             raise RuntimeError("Passo '{}' kind=hotkey precisa de 2+ teclas.".format(pid))
+        # Antes do Ctrl+C do XML: limpa clipboard para detectar falha de cópia
+        if pid == "pegar_xml.copiar":
+            try:
+                import pyperclip
+
+                pyperclip.copy("")
+                time.sleep(0.08)
+            except Exception:
+                pass
         teclado.hotkey(lista, pausa=_pausa_do_passo(passo, 0.08))
+        if pid == "pegar_xml.copiar":
+            # Falha já aqui (antes do F3): para sem gravar Status
+            time.sleep(0.25)
+            from automation.xml_nfe import ler_clipboard_xml_ou_falhar
+
+            ler_clipboard_xml_ou_falhar()
         return
 
     if kind in ("paste", "type"):
@@ -227,6 +242,7 @@ def _apos_parte(nome_parte, contexto):
     if nome_parte == "pegar_xml":
         from automation.xml_nfe import parse_nfe_clipboard
 
+        # Se Ctrl+C falhou → XmlClipboardFalhou (parar sem gravar Status)
         dados = parse_nfe_clipboard()
         invoice_digitos = "".join(c for c in str(dados.invoice or "") if c.isdigit())
         serie_digitos = "".join(c for c in str(dados.serie or "") if c.isdigit())

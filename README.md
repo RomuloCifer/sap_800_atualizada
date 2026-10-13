@@ -25,9 +25,9 @@ Deixe o SAP na tela certa de cada parte antes de mapear. O Mapear só pede **cli
 | 3 | `abrir_oj1b1n` | Campo onde escrever o tcode (`/oj1b1n`) |
 | 4 | `preencher_oj1b1n` | Célula **Nine-Digit No** |
 | 5 | `preencher_itens` | NF Item **meio** das linhas **1, 2, 5, 10, 20** + **Plant** (final da célula, linha 1) |
-| 6 | `preencher_taxes` | Selecionar item linhas **1, 2, 5, 10, 20** → botão Taxes → Tax Type 1 → Stat.TAX → Value **início** e **fim** → Other Base **1–6** → Taxes II → CBS and IBS → Taxes (antes do E matemático) → **E matemático** |
+| 6 | `preencher_taxes` | … → Other Base → Taxes II + CBS **só se** CBS/IBS no Excel → Taxes → **E matemático** |
 | 7 | `preencher_nfe_data` | Valor **início** `<<` e **fim** `>>` → clique **NF-e Data** → clique **Protocol No.** |
-| 8 | `salvar_e_fechar` | Salvar → 1,5s → Alt+F4 → balança → X (1,2s entre cliques; 2s no fim) |
+| 8 | `salvar_e_fechar` | **Só sucesso:** Salvar → 3,5s → Alt+F4 → balança → X |
 
 No `preencher_taxes`, mapeie Stat.TAX e Other Base 5/6 **mesmo em notas 2025** (usam em 2026+).
 
@@ -37,6 +37,7 @@ No `preencher_taxes`, mapeie Stat.TAX e Other Base 5/6 **mesmo em notas 2025** (
 - **Esc** para a automação a qualquer momento (mesmo com o SAP em foco).
 - Em pontos estratégicos aparece uma caixa **OK — continuar** / **Parar** (depois dos itens, Taxes e NF-e Data). Em **Parar**, digite o motivo — ele vai na coluna Status e a automação (e a fila) encerra.
 - Se faltar um clique mapeado no meio do fluxo, a automação **pausa e pede o botão do meio** na hora (grava e segue). Não precisa mapear `salvar_e_fechar` antes.
+- Se o **Ctrl+C do XML** falhar (clipboard vazio/inválido), a automação **para** e **não** grava Status (fica `Pendente`).
 
 ---
 
@@ -146,9 +147,9 @@ Ordem em `mapa_passos.json` → chave `"fluxo"`:
 3. `abrir_oj1b1n` — tcode + X0 + filial + V + Partner ID  
 4. `preencher_oj1b1n` — Nine-Digit, série, issue date  
 5. `preencher_itens` — NF→Material→Qtd→Preço→Desc→CFOP→impostos→Plant + Enter×(n+1) + **verificação humana**  
-6. `preencher_taxes` — taxes / Other Base + **verificação** + Taxes II / CBS / E matemático  
+6. `preencher_taxes` — taxes / Other Base + **verificação** + Taxes II/CBS **só se** houver CBS/IBS no Excel → E matemático  
 7. `preencher_nfe_data` — confere valor (±2¢) + protocolo / random + **verificação**
-8. `salvar_e_fechar` — Salvar → Alt+F4 → balança → X
+8. `salvar_e_fechar` — Salvar → Alt+F4 → balança → X (só no sucesso; em erro: Alt+F4 + X)
 Roteiro humano: `.scratch/partes.md`.
 
 ---

@@ -170,7 +170,7 @@ def executar_preenchimento(contexto, pontos, passo=None):
     """
     fase no passo:
       - ate_other_base: seleção → tax types → Value → Other Base (para checkpoint humano)
-      - fim: Taxes II → CBS/IBS → Taxes → E matemático
+      - fim: Taxes II+CBS/IBS (só se Excel tiver CBS/IBS) → Taxes → E matemático
       - tudo (padrão): as duas fases sem pausa humana
     """
     ctx = contexto or {}
@@ -193,14 +193,16 @@ def executar_preenchimento(contexto, pontos, passo=None):
         _colar_other_base(pontos, valor, n_other)
 
     if fase in ("tudo", "fim"):
-        abort.check()
-        _clicar(ID_TAXES_II, pontos, 0.4)
         cbs = _resolver_cbs_ibs(ctx)
-        _clicar(ID_CBS_IBS, pontos, 0.45)
         if cbs:
+            # Só entra em Taxes II quando há CBS/IBS na planilha
+            abort.check()
+            _clicar(ID_TAXES_II, pontos, 0.4)
+            _clicar(ID_CBS_IBS, pontos, 0.45)
             abort.sleep(0.2)
             _escrever(cbs)
             abort.sleep(0.1)
+        # Sem CBS/IBS: pula Taxes II e segue para Taxes → E matemático
 
         abort.check()
         _clicar(ID_TAXES_ANTES_MATEMATICO, pontos, 0.5)

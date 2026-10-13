@@ -1,8 +1,8 @@
 """
 Fila Excel: processa todos Status=Pendente em loop.
 
-Ao sucesso: fluxo já inclui salvar_e_fechar → Status=A-enviado → próximo.
-Ao erro: Status=A-erro → Alt+F4 + balança + X (sem salvar) → próximo.
+Ao sucesso: fluxo já inclui salvar_e_fechar (Salvar + Alt+F4 + balança + X) → Status=A-enviado → próximo.
+Ao erro: Status=A-erro → Alt+F4 + X (sem salvar, sem balança) → próximo.
 Parar (verificação): grava o motivo no Status e encerra a fila.
 Esc: para a fila (não altera Status se ainda Pendente).
 """
@@ -24,8 +24,8 @@ from automation.excel_fila import (
     resolver_arquivo_excel,
 )
 from automation.verificacao import VerificacaoCancelada
+from automation.xml_nfe import XmlClipboardFalhou
 
-ID_BALANCA = "salvar_e_fechar.clique_balanca"
 ID_X = "salvar_e_fechar.clique_x"
 
 
@@ -40,14 +40,13 @@ def _clique_id(pontos, pid, pausa_depois=1.2):
 def fechar_apos_erro(pontos=None):
     # type: (Optional[dict]) -> None
     """
-    Sem salvar: Alt+F4 → balança → X (mesmos pontos de salvar_e_fechar).
-    Usado quando o fluxo quebrou no meio e ainda precisa limpar a tela.
+    Sem salvar e sem balança: Alt+F4 → X.
+    Balança só no sucesso (parte salvar_e_fechar).
     """
     pts = pontos if pontos is not None else localmap.load_pontos()
     abort.check()
     teclado.hotkey(["alt", "f4"], pausa=0.15, hold=0.08)
     abort.sleep(1.2)
-    _clique_id(pts, ID_BALANCA, pausa_depois=1.2)
     _clique_id(pts, ID_X, pausa_depois=2.0)
 
 
@@ -125,6 +124,13 @@ def executar_fila(
             abortado = True
             item_info["status"] = "abortado"
             item_info["erro"] = "Esc"
+            processados.append(item_info)
+            break
+        except XmlClipboardFalhou as exc:
+            # Ctrl+C XML falhou: para tudo, NÃO grava Status (fica Pendente)
+            abortado = True
+            item_info["status"] = "xml_clipboard"
+            item_info["erro"] = str(exc)
             processados.append(item_info)
             break
         except VerificacaoCancelada as exc:

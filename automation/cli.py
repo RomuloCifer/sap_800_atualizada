@@ -109,8 +109,8 @@ def cmd_fluxo(args):
         from automation import fila as fila_mod
 
         print("Modo FILA Excel (todos Status=Pendente)")
-        print("  Status ok  -> A-enviado (fluxo já salva + Alt+F4 + balança + X)")
-        print("  Status err -> A-erro + Alt+F4 + balança + X (sem salvar) e segue")
+        print("  Status ok  -> A-enviado (Salvar + Alt+F4 + balança + X)")
+        print("  Status err -> A-erro + Alt+F4 + X (sem salvar/balança) e segue")
         print("  Parar      -> motivo no Status + encerra a fila")
         print("  Esc = parar a fila")
         print("Fluxo:", " -> ".join(catalog.listar_fluxo()))
@@ -184,6 +184,12 @@ def cmd_fluxo(args):
     except Exception as exc:
         from automation.excel_fila import marcar_resultado_do_contexto
         from automation.verificacao import VerificacaoCancelada
+        from automation.xml_nfe import XmlClipboardFalhou
+
+        if isinstance(exc, XmlClipboardFalhou):
+            # Ctrl+C XML falhou: para sem gravar Status
+            print("PARADO (XML):", exc, file=sys.stderr)
+            return 130
 
         try:
             if isinstance(exc, VerificacaoCancelada):

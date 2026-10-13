@@ -61,9 +61,9 @@
           "id": "abrir_batch.clique_relogio",
           "ordem": 5,
           "kind": "click",
-          "pausa_depois": 1.5,
+          "pausa_depois": 2.0,
           "nome": "relógio",
-          "obs": "1 clique no relógio; espera 1.5s antes do lápis azul"
+          "obs": "1 clique no relógio; espera 2s antes do lápis azul"
         },
         {
           "id": "abrir_batch.clique_lapis_azul",
@@ -93,9 +93,9 @@
           "kind": "hotkey",
           "keys": ["ctrl", "f6"],
           "pausa": 0.6,
-          "pausa_depois": 1.0,
+          "pausa_depois": 2.5,
           "nome": "abrir XML",
-          "obs": "Ctrl+F6 (0.6s entre Ctrl e F6); espera 1s antes do clique"
+          "obs": "Ctrl+F6 (0.6s entre Ctrl e F6); espera 2.5s antes do clique no XML"
         },
         {
           "id": "pegar_xml.clique_info_xml",
@@ -119,8 +119,9 @@
           "ordem": 5,
           "kind": "hotkey",
           "keys": ["ctrl", "c"],
+          "pausa_depois": 0.4,
           "nome": "copiar XML",
-          "obs": "Ctrl+C para copiar toda a informação"
+          "obs": "Ctrl+C; se o clipboard nao tiver XML, a automacao para sem gravar Status"
         },
         {
           "id": "pegar_xml.voltar_f3",
@@ -563,7 +564,7 @@
           "fase": "fim",
           "pausa_depois": 0.4,
           "nome": "Taxes II → CBS → E matemático",
-          "obs": "Taxes II → CBS/IBS → Taxes → E matemático"
+          "obs": "Se CBS/IBS vazio no Excel: pula Taxes II. Senão: Taxes II → CBS/IBS. Depois Taxes → E matemático"
         }
       ]
     },
@@ -719,13 +720,23 @@
           "id": "salvar_e_fechar.clique_salvar",
           "ordem": 1,
           "kind": "click",
-          "pausa_depois": 1.5,
+          "pausa_depois": 3.5,
           "nome": "salvar documento",
-          "obs": "1 clique em Salvar; espera 1.5s antes da balança"
+          "obs": "1 clique em Salvar; espera 3.5s antes do Alt+F4"
+        },
+        {
+          "id": "salvar_e_fechar.fechar_alt_f4",
+          "ordem": 2,
+          "kind": "hotkey",
+          "keys": ["alt", "f4"],
+          "pausa": 0.15,
+          "pausa_depois": 1.2,
+          "nome": "Alt+F4 fechar",
+          "obs": "Alt+F4; espera 1.2s antes da balança"
         },
         {
           "id": "salvar_e_fechar.clique_balanca",
-          "ordem": 2,
+          "ordem": 3,
           "kind": "click",
           "pausa_depois": 1.2,
           "nome": "balança",
@@ -733,7 +744,7 @@
         },
         {
           "id": "salvar_e_fechar.clique_x",
-          "ordem": 3,
+          "ordem": 4,
           "kind": "click",
           "pausa_depois": 2.0,
           "nome": "X fechar",

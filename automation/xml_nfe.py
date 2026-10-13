@@ -16,6 +16,15 @@ from typing import Any, Dict, List, Optional, Union
 NS = {"nfe": "http://www.portalfiscal.inf.br/nfe"}
 
 
+class XmlClipboardFalhou(Exception):
+    """
+    Ctrl+C do XML não trouxe conteúdo válido.
+    A automação deve parar SEM gravar Status no Excel (deixa Pendente).
+    """
+
+    pass
+
+
 @dataclass
 class ItemNFe:
     n_item: int
@@ -466,11 +475,67 @@ def parse_nfe_file(caminho):
     return parse_nfe_xml(path.read_text(encoding="utf-8"))
 
 
+def _clipboard_parece_xml_nfe(texto):
+    # type: (Optional[str]) -> bool
+    t = (texto or "").strip()
+    if len(t) < 40:
+        return False
+    low = t.lower()
+    if "<" not in t:
+        return False
+    # NF-e / CT-e / nfeProc / cteProc (SAP às vezes cola trecho grande)
+    marcadores = (
+        "nfeproc",
+        "infnfe",
+        "cteproc",
+        "infcte",
+        "<nfe",
+        "<cte",
+        "nfe:",
+        "cte:",
+    )
+    return any(m in low for m in marcadores)
+
+
+def ler_clipboard_xml_ou_falhar():
+    # type: () -> str
+    """
+    Lê o clipboard após Ctrl+C. Se vazio/inválido → XmlClipboardFalhou
+    (parar sem gravar Status).
+    """
+    import pyperclip
+
+    try:
+        texto = pyperclip.paste()
+    except Exception as exc:
+        raise XmlClipboardFalhou(
+            "Nao consegui ler o clipboard apos Ctrl+C: {}".format(exc)
+        )
+    if not _clipboard_parece_xml_nfe(texto):
+        dump = _salvar_dump_clipboard(texto or "", "Ctrl+C XML falhou / clipboard invalido")
+        raise XmlClipboardFalhou(
+            "Ctrl+C do XML nao funcionou (clipboard vazio ou sem XML de NF-e/CT-e). "
+            "Automacao parada — Status no Excel NAO foi alterado. "
+            "Dump: {}".format(dump)
+        )
+    return texto or ""
+
+
 def parse_nfe_clipboard(texto_clipboard=None):
     # type: (Optional[str]) -> DadosNFe
     """Lê XML do clipboard (após Ctrl+C no SAP) ou de texto passado."""
     if texto_clipboard is None:
-        import pyperclip
-
-        texto_clipboard = pyperclip.paste()
-    return parse_nfe_xml(texto_clipboard or "")
+        texto_clipboard = ler_clipboard_xml_ou_falhar()
+    try:
+        return parse_nfe_xml(texto_clipboard or "")
+    except XmlClipboardFalhou:
+        raise
+    except Exception as exc:
+        dump = _salvar_dump_clipboard(
+            texto_clipboard or "", "parse falhou apos Ctrl+C: {}".format(exc)
+        )
+        raise XmlClipboardFalhou(
+            "Ctrl+C do XML nao trouxe XML valido: {}. "
+            "Automacao parada — Status no Excel NAO foi alterado. "
+            "Dump: {}".format(exc, dump)
+        ) from exc
