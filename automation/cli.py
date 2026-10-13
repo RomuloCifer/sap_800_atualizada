@@ -109,8 +109,9 @@ def cmd_fluxo(args):
         from automation import fila as fila_mod
 
         print("Modo FILA Excel (todos Status=Pendente)")
-        print("  Status ok  -> teste_ok + Alt+F4 + clique foco")
-        print("  Status err -> teste_erro + tenta fechar e segue")
+        print("  Status ok  -> A-enviado (fluxo já salva + Alt+F4 + balança + X)")
+        print("  Status err -> A-erro + Alt+F4 + balança + X (sem salvar) e segue")
+        print("  Parar      -> motivo no Status + encerra a fila")
         print("  Esc = parar a fila")
         print("Fluxo:", " -> ".join(catalog.listar_fluxo()))
         print("Feche o Excel na planilha antes (grava Status).")
@@ -136,6 +137,7 @@ def cmd_fluxo(args):
         print("FILA encerrada.")
         print("  ok:", resumo.get("ok"))
         print("  erro:", resumo.get("erro"))
+        print("  parado:", resumo.get("parado"), resumo.get("motivo_parar") or "")
         print("  abortado:", resumo.get("abortado"))
         for it in resumo.get("processados") or []:
             print(
@@ -146,7 +148,9 @@ def cmd_fluxo(args):
                     it.get("erro") or "",
                 )
             )
-        return 130 if resumo.get("abortado") else (1 if resumo.get("erro") else 0)
+        if resumo.get("abortado") or resumo.get("parado"):
+            return 130
+        return 1 if resumo.get("erro") else 0
 
     ctx = _carregar_excel_se_pedido(args)
     fluxo = catalog.listar_fluxo()
@@ -175,15 +179,19 @@ def cmd_fluxo(args):
         with abort.sessao():
             resultado = runner.executar_fluxo(texto=None, contexto=ctx, on_parte=on_parte)
     except abort.AbortError:
-        from automation.excel_fila import marcar_resultado_do_contexto
-
-        # Abortado pelo usuario: nao marca teste_ok; deixa Pendente
+        # Abortado pelo usuario (Esc): nao altera Status; deixa Pendente
         raise
-    except Exception:
+    except Exception as exc:
         from automation.excel_fila import marcar_resultado_do_contexto
+        from automation.verificacao import VerificacaoCancelada
 
         try:
-            st = marcar_resultado_do_contexto(ctx, False)
+            if isinstance(exc, VerificacaoCancelada):
+                st = marcar_resultado_do_contexto(
+                    ctx, False, status_custom=exc.motivo
+                )
+            else:
+                st = marcar_resultado_do_contexto(ctx, False)
             if st:
                 print("Excel Status ->", st, flush=True)
         except Exception as exc_mark:
@@ -215,10 +223,14 @@ def cmd_parte(args):
     print("Contexto batch/issuer:", ctx.get("batch"), ctx.get("issuer_id"))
     faltam = localmap.ids_faltando(nome)
     if faltam:
-        print("ERRO: faltam coordenadas. Use mapear {}.".format(nome), file=sys.stderr)
+        print(
+            "AVISO: {} ponto(s) sem XY — pedirá botão do meio na hora:".format(
+                len(faltam)
+            ),
+            flush=True,
+        )
         for f in faltam:
-            print("  -", f, file=sys.stderr)
-        return 2
+            print("  -", f, flush=True)
     _countdown(args.delay, "Parte")
     print(">>> Rodando parte: {}".format(nome), flush=True)
     with abort.sessao():
@@ -289,7 +301,7 @@ def build_parser():
     s_fluxo.add_argument(
         "--fila",
         action="store_true",
-        help="Com --excel: processa todos Pendente em loop (teste_ok/teste_erro)",
+        help="Com --excel: processa todos Pendente em loop (A-enviado/A-erro)",
     )
     s_fluxo.set_defaults(func=cmd_fluxo)
 

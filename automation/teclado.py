@@ -143,23 +143,28 @@ def pressionar_lista(nomes, pausa=0.08, hold=0.06):
 
 def hotkey(nomes, pausa=0.08, hold=0.06):
     # type: (List[str], float, float) -> None
-    """Ex.: ['ctrl', 'f6'] ou ['ctrl', 'a']."""
+    """
+    Ex.: ['ctrl', 'f6'] ou ['ctrl', 'a'].
+    pausa = intervalo entre as teclas (keydown); hold = tempo segurando o acorde.
+    """
     resolved = []
     for nome in nomes:
         n = str(nome).strip().lower()
         resolved.append((n, _vk(n), n in _EXTENDED))
 
-    for _n, vk, ext in resolved:
+    gap = max(0.02, float(pausa))
+    for i, (_n, vk, ext) in enumerate(resolved):
         _send_vk(vk, keyup=False, extended=ext)
-        time.sleep(0.02)
+        if i < len(resolved) - 1:
+            time.sleep(gap)
+        else:
+            time.sleep(0.02)
 
     time.sleep(max(0.02, float(hold)))
 
     for _n, vk, ext in reversed(resolved):
         _send_vk(vk, keyup=True, extended=ext)
         time.sleep(0.02)
-
-    time.sleep(max(0.0, float(pausa)))
 
 
 def digitar_texto(texto, pausa_char=0.03):

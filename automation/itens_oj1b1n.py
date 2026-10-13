@@ -188,16 +188,16 @@ def executar_preenchimento(contexto, pontos, passo=None):
         win_mouse.click(x, y)
         time.sleep(0.15)
 
-        # NF Item: sempre "1"
+        # Ordem nesta máquina: NF → Material → Qtd → Preço → Desc → CFOP → impostos → Plant
         _digitar_campo("1")
         _tab()
         _digitar_campo(material)
         _tab()
-        _digitar_campo(descricao)
-        _tab()
         _digitar_campo(formatar_quantidade(qtd))
         _tab()
         _digitar_campo(formatar_preco(preco))
+        _tab()
+        _digitar_campo(descricao)
         _tab()
         _digitar_campo(cfop_para_sap(cfop))
         for codigo in CODIGOS_FIXOS:

@@ -1,14 +1,14 @@
 """
 Fila Excel: processa todos Status=Pendente em loop.
 
-Ao sucesso: Status=teste_ok → Alt+F4 → clique de foco → próximo.
-Ao erro: Status=teste_erro → tenta Alt+F4 + foco → próximo.
+Ao sucesso: fluxo já inclui salvar_e_fechar → Status=A-enviado → próximo.
+Ao erro: Status=A-erro → Alt+F4 + balança + X (sem salvar) → próximo.
+Parar (verificação): grava o motivo no Status e encerra a fila.
 Esc: para a fila (não altera Status se ainda Pendente).
 """
 
 from __future__ import annotations
 
-import time
 from typing import Any, Callable, Dict, List, Optional
 
 from automation import abort
@@ -23,31 +23,38 @@ from automation.excel_fila import (
     primeira_pendente,
     resolver_arquivo_excel,
 )
+from automation.verificacao import VerificacaoCancelada
 
-ID_FOCO = "entre_batches.clique_foco"
+ID_BALANCA = "salvar_e_fechar.clique_balanca"
+ID_X = "salvar_e_fechar.clique_x"
 
 
-def _clique_foco(pontos=None):
+def _clique_id(pontos, pid, pausa_depois=1.2):
+    # type: (dict, str, float) -> None
+    abort.check()
+    x, y = localmap.garantir_xy(pid, pontos, passo={"id": pid, "nome": pid})
+    win_mouse.click(int(x), int(y))
+    abort.sleep(float(pausa_depois))
+
+
+def fechar_apos_erro(pontos=None):
     # type: (Optional[dict]) -> None
+    """
+    Sem salvar: Alt+F4 → balança → X (mesmos pontos de salvar_e_fechar).
+    Usado quando o fluxo quebrou no meio e ainda precisa limpar a tela.
+    """
     pts = pontos if pontos is not None else localmap.load_pontos()
-    item = pts.get(ID_FOCO)
-    if not item or "x" not in item or "y" not in item:
-        raise RuntimeError(
-            "Falta mapear '{}' (parte entre_batches). "
-            "Use Mapear nessa parte uma vez.".format(ID_FOCO)
-        )
-    win_mouse.click(int(item["x"]), int(item["y"]))
-    time.sleep(0.35)
-
-
-def fechar_janela_e_focar(pontos=None):
-    # type: (Optional[dict]) -> None
-    """Alt+F4 na janela atual + clique para focar o SAP de novo."""
     abort.check()
     teclado.hotkey(["alt", "f4"], pausa=0.15, hold=0.08)
-    abort.sleep(0.9)
-    abort.check()
-    _clique_foco(pontos)
+    abort.sleep(1.2)
+    _clique_id(pts, ID_BALANCA, pausa_depois=1.2)
+    _clique_id(pts, ID_X, pausa_depois=2.0)
+
+
+# Nome antigo (imports / docs): agora fecha sem o clique de foco
+def fechar_janela_e_focar(pontos=None):
+    # type: (Optional[dict]) -> None
+    fechar_apos_erro(pontos)
 
 
 def _marcar(caminho, linha, status):
@@ -66,32 +73,19 @@ def executar_fila(
 ):
     # type: (Optional[str], float, Optional[Callable], Optional[Callable], Optional[int]) -> Dict[str, Any]
     """
-    Loop: pega 1a Pendente → fluxo completo → marca status → fecha → próximo.
-    Retorna resumo {ok, erro, abortado, processados}.
+    Loop: pega 1a Pendente → fluxo completo (inclui salvar_e_fechar) → marca status → próximo.
+    Retorna resumo {ok, erro, abortado, parado, processados}.
     """
     path = resolver_arquivo_excel(caminho_excel)
     pontos = localmap.load_pontos()
-    if ID_FOCO not in pontos or "x" not in (pontos.get(ID_FOCO) or {}):
-        raise RuntimeError(
-            "Falta mapear a parte 'entre_batches' (clique de foco após Alt+F4)."
-        )
-
-    # valida coordenadas de todas as partes do fluxo uma vez
-    from automation import mapa as catalog
-
-    for nome in catalog.listar_fluxo():
-        faltam = localmap.ids_faltando(nome)
-        if faltam:
-            raise RuntimeError(
-                "Parte '{}': faltam coordenadas.\n  - {}".format(
-                    nome, "\n  - ".join(faltam)
-                )
-            )
+    # Pontos faltantes: pedidos na hora (botão do meio) ao chegar no clique.
 
     ok = 0
     erro = 0
     processados = []  # type: List[dict]
     abortado = False
+    parado = False
+    motivo_parar = None  # type: Optional[str]
 
     n = 0
     while True:
@@ -122,22 +116,27 @@ def executar_fila(
                 pausa_entre=pausa_entre,
                 on_parte=on_parte,
             )
-            # Se chegou ao fim, a conferência de valor passou
+            # Fluxo completo já salvou e fechou (salvar_e_fechar)
             _marcar(linha.caminho, linha.linha, STATUS_OK)
             item_info["status"] = STATUS_OK
             item_info["invoice"] = resultado.get("invoice")
             ok += 1
-            try:
-                fechar_janela_e_focar(pontos)
-            except abort.AbortError:
-                raise
-            except Exception as exc_foco:
-                # sucesso já marcado; falha ao fechar pode atrapalhar o próximo
-                item_info["aviso_foco"] = str(exc_foco)
         except abort.AbortError:
             abortado = True
             item_info["status"] = "abortado"
             item_info["erro"] = "Esc"
+            processados.append(item_info)
+            break
+        except VerificacaoCancelada as exc:
+            # Parar: grava o motivo no Status e encerra a fila (não segue)
+            parado = True
+            motivo_parar = exc.motivo
+            item_info["status"] = exc.motivo
+            item_info["erro"] = "Parar: {}".format(exc.motivo)
+            try:
+                _marcar(linha.caminho, linha.linha, exc.motivo)
+            except Exception as exc_mark:
+                item_info["erro_mark"] = str(exc_mark)
             processados.append(item_info)
             break
         except Exception as exc:
@@ -149,7 +148,7 @@ def executar_fila(
             except Exception as exc_mark:
                 item_info["erro_mark"] = str(exc_mark)
             try:
-                fechar_janela_e_focar(pontos)
+                fechar_apos_erro(pontos)
             except abort.AbortError:
                 abortado = True
                 processados.append(item_info)
@@ -164,6 +163,8 @@ def executar_fila(
         "ok": ok,
         "erro": erro,
         "abortado": abortado,
+        "parado": parado,
+        "motivo_parar": motivo_parar,
         "processados": processados,
         "excel": str(path),
     }

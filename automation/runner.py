@@ -15,12 +15,13 @@ from automation import mapa as catalog
 from automation import teclado
 from automation import win_mouse
 
-# Opcional: a UI registra um handler thread-safe (askokcancel na thread do Tk).
-_user_action_handler = None  # type: Optional[Callable[[dict], bool]]
+# Opcional: a UI registra um handler thread-safe.
+# Pode devolver True, False ou (False, motivo).
+_user_action_handler = None  # type: Optional[Callable[[dict], object]]
 
 
 def set_user_action_handler(handler):
-    # type: (Optional[Callable[[dict], bool]]) -> None
+    # type: (Optional[Callable[[dict], object]]) -> None
     global _user_action_handler
     _user_action_handler = handler
 
@@ -74,91 +75,26 @@ def _resolver_texto(passo, texto=None, contexto=None, pedir_se_faltar=False):
     )
 
 
-def _dialogo_verificacao_avulso(titulo, mensagem):
-    # type: (str, str) -> bool
-    """Caixa Tk com OK / Parar (CLI ou quando não há handler da App)."""
-    root = tk._default_root
-    created = False
-    if root is None:
-        root = tk.Tk()
-        root.withdraw()
-        created = True
-
-    win = tk.Toplevel(root)
-    win.title("Verificação humana")
-    win.configure(bg="#1e1e1e")
-    win.attributes("-topmost", True)
-    win.resizable(False, False)
-    win.grab_set()
-    escolha = {"ok": False}
-
-    tk.Label(win, text="Verificação", font=("Segoe UI", 11), fg="#aaaaaa", bg="#1e1e1e").pack(
-        anchor="w", padx=20, pady=(16, 0)
-    )
-    tk.Label(
-        win,
-        text=titulo,
-        font=("Segoe UI", 14, "bold"),
-        fg="#ffffff",
-        bg="#1e1e1e",
-        wraplength=420,
-        justify="left",
-    ).pack(anchor="w", padx=20, pady=(6, 0))
-    tk.Label(
-        win,
-        text=mensagem,
-        font=("Segoe UI", 10),
-        fg="#ffcc66",
-        bg="#1e1e1e",
-        wraplength=420,
-        justify="left",
-    ).pack(anchor="w", padx=20, pady=(10, 0))
-
-    row = tk.Frame(win, bg="#1e1e1e")
-    row.pack(fill="x", padx=20, pady=18)
-
-    def ok():
-        escolha["ok"] = True
-        win.destroy()
-
-    def parar():
-        escolha["ok"] = False
-        win.destroy()
-
-    btn_ok = tk.Button(
-        row, text="OK — continuar", width=18, height=2, font=("Segoe UI", 10, "bold"), command=ok
-    )
-    btn_ok.pack(side="left", padx=(0, 10))
-    tk.Button(row, text="Parar", width=12, height=2, command=parar).pack(side="left")
-    win.protocol("WM_DELETE_WINDOW", parar)
-    win.bind("<Return>", lambda _e: ok())
-    win.bind("<Escape>", lambda _e: parar())
-    win.update_idletasks()
-    w, h = win.winfo_reqwidth(), win.winfo_reqheight()
-    sx, sy = win.winfo_screenwidth(), win.winfo_screenheight()
-    win.geometry("+{}+{}".format(max(40, (sx - w) // 2), max(40, (sy - h) // 3)))
-    btn_ok.focus_set()
-    win.wait_window()
-    if created:
-        try:
-            root.destroy()
-        except Exception:
-            pass
-    return bool(escolha["ok"])
-
-
 def _pedir_acao_usuario(passo):
     # type: (dict) -> None
+    from automation.verificacao import VerificacaoCancelada, dialogo_verificacao
+
     nome = passo.get("nome") or passo.get("id")
     obs = (passo.get("obs") or "").strip()
-    msg = obs or "Confira a tela e clique em OK para continuar (Parar = interrompe)."
+    msg = obs or "Confira a tela e clique em OK para continuar (Parar = encerra e grava motivo no Excel)."
 
     if _user_action_handler is not None:
-        ok = bool(_user_action_handler(passo))
+        resultado = _user_action_handler(passo)
+        # Handler pode devolver True, False ou (ok, motivo)
+        if isinstance(resultado, tuple):
+            ok, motivo = resultado[0], (resultado[1] if len(resultado) > 1 else None)
+        else:
+            ok, motivo = bool(resultado), None
     else:
-        ok = _dialogo_verificacao_avulso(str(nome), msg)
+        ok, motivo = dialogo_verificacao(None, str(nome), msg)
+
     if not ok:
-        raise RuntimeError("Usuario cancelou verificacao em '{}'.".format(passo.get("id")))
+        raise VerificacaoCancelada(motivo or "parado", passo_id=passo.get("id"))
 
 def _pausa_do_passo(passo, padrao):
     # type: (dict, float) -> float
@@ -241,7 +177,8 @@ def _executar_passo(passo, texto, pontos, contexto=None, pedir_texto=False):
         return
 
     if kind in kinds.KINDS_COM_XY:
-        x, y = localmap.resolve_xy(pid, pontos)
+        # Se faltar XY, pede botão do meio na hora e grava (não precisa Mapear antes).
+        x, y = localmap.garantir_xy(pid, pontos, passo=passo)
         if kind == "click":
             win_mouse.click(x, y)
             return
@@ -263,20 +200,13 @@ def executar_parte(nome_parte, texto=None, pausa_entre=0.35, contexto=None):
     """
     Roda todos os passos da parte.
     contexto: dict com chaves text_from (recipient_filial, issuer_id, …).
+    Pontos faltantes: pede botão do meio na hora e grava.
     """
     win_mouse.ensure_dpi_awareness()
     passos = catalog.passos_da_parte(nome_parte)
     if not passos:
         raise RuntimeError(
             "A parte '{}' não tem passos em mapa_passos.json ainda.".format(nome_parte)
-        )
-
-    faltam = localmap.ids_faltando(nome_parte)
-    if faltam:
-        raise RuntimeError(
-            "Faltam coordenadas locais ({}). Use Mapear antes.\n  - {}".format(
-                len(faltam), "\n  - ".join(faltam)
-            )
         )
 
     pontos = localmap.load_pontos()
@@ -346,14 +276,7 @@ def executar_fluxo(texto=None, contexto=None, pausa_entre=0.35, on_parte=None):
         if not str(ctx.get("batch") or "").strip():
             ctx["batch"] = str(texto).strip()
 
-    for nome in fluxo:
-        faltam = localmap.ids_faltando(nome)
-        if faltam:
-            raise RuntimeError(
-                "Parte '{}': faltam coordenadas. Use Mapear nessa parte.\n  - {}".format(
-                    nome, "\n  - ".join(faltam)
-                )
-            )
+    # Pontos faltantes são pedidos na hora (botão do meio), não bloqueiam o início.
 
     total_passos = 0
     for nome in fluxo:

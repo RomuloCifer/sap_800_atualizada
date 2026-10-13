@@ -7,6 +7,9 @@ Colunas por nome do cabeçalho (não pela letra):
 
 from __future__ import annotations
 
+import os
+import tempfile
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Union
@@ -15,8 +18,8 @@ ROOT = Path(__file__).resolve().parent.parent
 EXCEL_DIR = ROOT / "excel"
 
 STATUS_ALVO = "pendente"
-STATUS_OK = "teste_ok"
-STATUS_ERRO = "teste_erro"
+STATUS_OK = "A-enviado"
+STATUS_ERRO = "A-erro"
 
 # Nomes aceitos no cabeçalho (case-insensitive)
 COL_STATUS = ("status",)
@@ -114,16 +117,73 @@ def resolver_arquivo_excel(caminho=None):
     return unicos[0]
 
 
+def _load_workbook(path, **kwargs):
+    # type: (Path, object) -> object
+    """Abre o xlsx; se estiver corrompido, mensagem clara (não o KeyError do zip)."""
+    import openpyxl
+
+    try:
+        return openpyxl.load_workbook(path, **kwargs)
+    except KeyError as exc:
+        if "Content_Types" in str(exc):
+            raise RuntimeError(
+                "Excel corrompido ou incompleto: '{}'.\n"
+                "Substitua por uma cópia boa em excel/ e feche o arquivo no Excel "
+                "antes de gravar Status.".format(Path(path).name)
+            ) from exc
+        raise
+    except zipfile.BadZipFile as exc:
+        raise RuntimeError(
+            "Excel inválido (não é .xlsx ZIP): '{}'.\n"
+            "Salve de novo como .xlsx e coloque em excel/.".format(Path(path).name)
+        ) from exc
+
+
+def _salvar_workbook_atomico(wb, path):
+    # type: (object, Path) -> None
+    """
+    Grava em arquivo temporário na mesma pasta e só depois troca o original
+    (os.replace). Assim um Ctrl+C / crash no meio do save não corrompe o xlsx.
+    """
+    path = Path(path)
+    fd, tmp_name = tempfile.mkstemp(
+        prefix="._{}.".format(path.stem[:40]),
+        suffix=".xlsx.tmp",
+        dir=str(path.parent),
+    )
+    os.close(fd)
+    tmp_path = Path(tmp_name)
+    try:
+        wb.save(str(tmp_path))
+        # Confirma que o ZIP ficou completo antes de substituir
+        with zipfile.ZipFile(str(tmp_path), "r") as zf:
+            nomes = zf.namelist()
+        if "[Content_Types].xml" not in nomes:
+            raise RuntimeError(
+                "Falha ao gravar Excel: arquivo temporário incompleto "
+                "(sem [Content_Types].xml). Original NÃO foi alterado."
+            )
+        os.replace(str(tmp_path), str(path))
+        tmp_path = None  # já foi renomeado; não apagar
+    except BaseException:
+        # KeyboardInterrupt inclusive: original intacto
+        if tmp_path is not None:
+            try:
+                if tmp_path.is_file():
+                    tmp_path.unlink()
+            except Exception:
+                pass
+        raise
+
+
 def primeira_pendente(caminho=None):
     # type: (Union[str, Path, None]) -> LinhaFila
     """
     Retorna a primeira linha cujo Status (normalizado) == 'pendente'.
     Nao pega 'Enviados ... pendente revisao' — so Status exatamente Pendente.
     """
-    import openpyxl
-
     path = resolver_arquivo_excel(caminho)
-    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    wb = _load_workbook(path, read_only=True, data_only=True)
     try:
         ws = wb.active
         rows = ws.iter_rows(values_only=True)
@@ -198,10 +258,8 @@ def primeira_pendente(caminho=None):
 def ler_cbs_ibs_linha(caminho, linha_1based):
     # type: (Union[str, Path], int) -> str
     """Relê CBS/IBS de uma linha específica (1-based, com cabeçalho na 1)."""
-    import openpyxl
-
     path = Path(caminho)
-    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    wb = _load_workbook(path, read_only=True, data_only=True)
     try:
         ws = wb.active
         rows = ws.iter_rows(values_only=True)
@@ -226,15 +284,14 @@ def atualizar_status(caminho, linha_1based, novo_status):
     # type: (Union[str, Path], int, str) -> None
     """
     Grava Status na linha (1-based).
+    Save atômico (temp → replace): Ctrl+C no meio não corrompe o original.
     Feche o Excel na planilha antes — arquivo aberto trava a gravação.
     """
-    import openpyxl
-
     path = Path(caminho)
     if not path.is_file():
         raise FileNotFoundError("Excel nao encontrado: {}".format(path))
 
-    wb = openpyxl.load_workbook(path)
+    wb = _load_workbook(path)
     try:
         ws = wb.active
         header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True))
@@ -243,7 +300,7 @@ def atualizar_status(caminho, linha_1based, novo_status):
         if i_status is None:
             raise RuntimeError("Coluna Status nao encontrada em {}.".format(path.name))
         ws.cell(row=int(linha_1based), column=i_status + 1, value=str(novo_status))
-        wb.save(path)
+        _salvar_workbook_atomico(wb, path)
     finally:
         wb.close()
 
@@ -257,11 +314,12 @@ def tem_pendente(caminho=None):
         return False
 
 
-def marcar_resultado_do_contexto(contexto, sucesso):
-    # type: (dict, bool) -> Optional[str]
+def marcar_resultado_do_contexto(contexto, sucesso, status_custom=None):
+    # type: (dict, bool, Optional[str]) -> Optional[str]
     """
     Se o contexto veio do Excel (excel_arquivo + excel_linha), grava Status.
-    sucesso True → teste_ok; False → teste_erro.
+    sucesso True → A-enviado; False → A-erro.
+    Se status_custom for informado (ex.: motivo do Parar), grava esse texto.
     Retorna o status gravado ou None se não havia linha Excel.
     """
     ctx = contexto or {}
@@ -269,6 +327,9 @@ def marcar_resultado_do_contexto(contexto, sucesso):
     linha = ctx.get("excel_linha")
     if not caminho or not linha:
         return None
-    status = STATUS_OK if sucesso else STATUS_ERRO
+    if status_custom is not None and str(status_custom).strip():
+        status = str(status_custom).strip()
+    else:
+        status = STATUS_OK if sucesso else STATUS_ERRO
     atualizar_status(caminho, int(linha), status)
     return status

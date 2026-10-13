@@ -156,103 +156,29 @@ class App(tk.Tk):
         runner.set_user_action_handler(self._ask_user_action)
 
     def _ask_user_action(self, passo):
-        # type: (dict) -> bool
+        # type: (dict) -> object
+        """Retorna True (OK) ou (False, motivo) se Parar."""
+        from automation.verificacao import dialogo_verificacao
+
         done = threading.Event()
-        result = {"ok": False}
+        result = {"ok": False, "motivo": None}
         nome = passo.get("nome") or passo.get("id")
         obs = (passo.get("obs") or "").strip()
         msg = obs or "Confira a tela e clique em OK para continuar."
 
         def mostrar():
             try:
-                result["ok"] = bool(self._dialogo_verificacao(str(nome), msg))
+                ok, motivo = dialogo_verificacao(self, str(nome), msg)
+                result["ok"] = ok
+                result["motivo"] = motivo
             finally:
                 done.set()
 
         self.after(0, mostrar)
         done.wait()
-        return bool(result["ok"])
-
-    def _dialogo_verificacao(self, titulo, mensagem):
-        # type: (str, str) -> bool
-        """Caixa sempre na frente com botões OK / Parar."""
-        win = tk.Toplevel(self)
-        win.title("Verificação humana")
-        win.configure(bg="#1e1e1e")
-        win.attributes("-topmost", True)
-        win.resizable(False, False)
-        win.grab_set()
-
-        escolha = {"ok": False}
-
-        tk.Label(
-            win,
-            text="Verificação",
-            font=("Segoe UI", 11),
-            fg="#aaaaaa",
-            bg="#1e1e1e",
-        ).pack(anchor="w", padx=20, pady=(16, 0))
-
-        tk.Label(
-            win,
-            text=titulo,
-            font=("Segoe UI", 14, "bold"),
-            fg="#ffffff",
-            bg="#1e1e1e",
-            wraplength=420,
-            justify="left",
-        ).pack(anchor="w", padx=20, pady=(6, 0))
-
-        tk.Label(
-            win,
-            text=mensagem,
-            font=("Segoe UI", 10),
-            fg="#ffcc66",
-            bg="#1e1e1e",
-            wraplength=420,
-            justify="left",
-        ).pack(anchor="w", padx=20, pady=(10, 0))
-
-        row = tk.Frame(win, bg="#1e1e1e")
-        row.pack(fill="x", padx=20, pady=18)
-
-        def ok():
-            escolha["ok"] = True
-            win.destroy()
-
-        def parar():
-            escolha["ok"] = False
-            win.destroy()
-
-        btn_ok = tk.Button(
-            row,
-            text="OK — continuar",
-            width=18,
-            height=2,
-            font=("Segoe UI", 10, "bold"),
-            command=ok,
-        )
-        btn_ok.pack(side="left", padx=(0, 10))
-
-        tk.Button(
-            row,
-            text="Parar",
-            width=12,
-            height=2,
-            command=parar,
-        ).pack(side="left")
-
-        win.protocol("WM_DELETE_WINDOW", parar)
-        win.bind("<Return>", lambda _e: ok())
-        win.bind("<Escape>", lambda _e: parar())
-
-        win.update_idletasks()
-        w, h = win.winfo_reqwidth(), win.winfo_reqheight()
-        sx, sy = win.winfo_screenwidth(), win.winfo_screenheight()
-        win.geometry("+{}+{}".format(max(40, (sx - w) // 2), max(40, (sy - h) // 3)))
-        btn_ok.focus_set()
-        win.wait_window()
-        return bool(escolha["ok"])
+        if result["ok"]:
+            return True
+        return (False, result["motivo"])
 
     def _recarregar_partes(self):
         # type: () -> None
@@ -449,6 +375,20 @@ class App(tk.Tk):
             except abort.AbortError as exc:
                 self.after(0, lambda: self._fim_abort(str(exc)))
             except Exception as exc:
+                from automation.verificacao import VerificacaoCancelada
+
+                if isinstance(exc, VerificacaoCancelada):
+                    try:
+                        from automation.excel_fila import marcar_resultado_do_contexto
+
+                        marcar_resultado_do_contexto(
+                            ctx, False, status_custom=exc.motivo
+                        )
+                    except Exception:
+                        pass
+                    msg_parar = "Parado: {}".format(exc.motivo)
+                    self.after(0, lambda m=msg_parar: self._fim_abort(m))
+                    return
                 self.after(0, lambda: self._fim_erro("Iniciar parte", str(exc)))
 
         threading.Thread(target=trabalho, daemon=True).start()
@@ -552,6 +492,25 @@ class App(tk.Tk):
             except abort.AbortError as exc:
                 self.after(0, lambda: self._fim_abort(str(exc)))
             except Exception as exc:
+                from automation.verificacao import VerificacaoCancelada
+
+                if isinstance(exc, VerificacaoCancelada):
+                    aviso = ""
+                    try:
+                        from automation.excel_fila import marcar_resultado_do_contexto
+
+                        st = marcar_resultado_do_contexto(
+                            ctx, False, status_custom=exc.motivo
+                        )
+                        if st:
+                            aviso = "\nExcel Status: {}".format(st)
+                    except Exception as exc_mark:
+                        aviso = "\n(AVISO: nao gravou Status: {})".format(exc_mark)
+                    msg_parar = "Parado pelo usuário.\nMotivo: {}{}".format(
+                        exc.motivo, aviso
+                    )
+                    self.after(0, lambda m=msg_parar: self._fim_abort(m))
+                    return
                 try:
                     from automation.excel_fila import marcar_resultado_do_contexto
 
@@ -566,15 +525,6 @@ class App(tk.Tk):
         # type: () -> None
         from automation import fila as fila_mod
         from automation.excel_fila import resolver_arquivo_excel
-
-        faltam_foco = localmap.ids_faltando("entre_batches")
-        if faltam_foco:
-            messagebox.showerror(
-                "Fila",
-                "Mapeie a parte 'entre_batches' (clique de foco após Alt+F4).\n"
-                "Faltam: {}".format(", ".join(faltam_foco)),
-            )
-            return
 
         try:
             path = resolver_arquivo_excel()
@@ -620,17 +570,19 @@ class App(tk.Tk):
                     )
                 msg = (
                     "Fila encerrada.\n"
-                    "OK (teste_ok): {}\n"
-                    "Erro (teste_erro): {}\n"
+                    "OK (A-enviado): {}\n"
+                    "Erro (A-erro): {}\n"
+                    "Parado (motivo no Status): {}\n"
                     "Abortado (Esc): {}\n"
                     "Arquivo: {}"
                 ).format(
                     resumo.get("ok"),
                     resumo.get("erro"),
+                    resumo.get("motivo_parar") or ("sim" if resumo.get("parado") else "não"),
                     resumo.get("abortado"),
                     path.name,
                 )
-                if resumo.get("abortado"):
+                if resumo.get("abortado") or resumo.get("parado"):
                     self.after(0, lambda: self._fim_abort(msg))
                 else:
                     self.after(0, lambda: self._fim_ok(msg))

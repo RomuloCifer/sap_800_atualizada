@@ -8,7 +8,8 @@
     "preencher_oj1b1n",
     "preencher_itens",
     "preencher_taxes",
-    "preencher_nfe_data"
+    "preencher_nfe_data",
+    "salvar_e_fechar"
   ],
   "partes": {
     "abrir_batch": {
@@ -60,17 +61,17 @@
           "id": "abrir_batch.clique_relogio",
           "ordem": 5,
           "kind": "click",
-          "pausa_depois": 1.0,
+          "pausa_depois": 1.5,
           "nome": "relógio",
-          "obs": "1 clique no relógio; espera 1s"
+          "obs": "1 clique no relógio; espera 1.5s antes do lápis azul"
         },
         {
           "id": "abrir_batch.clique_lapis_azul",
           "ordem": 6,
           "kind": "click",
-          "pausa_depois": 1.5,
+          "pausa_depois": 2.0,
           "nome": "lápis azul",
-          "obs": "1 clique no lápis azul; espera 1.5s antes do pegar_xml"
+          "obs": "1 clique no lápis azul; espera 2s antes do pegar_xml"
         }
       ]
     },
@@ -82,17 +83,19 @@
           "ordem": 1,
           "kind": "keys",
           "keys": ["f6"],
+          "pausa_depois": 0.6,
           "nome": "tecla F6",
-          "obs": "Tecla F6"
+          "obs": "Tecla F6; espera 0.6s antes do Ctrl+F6"
         },
         {
           "id": "pegar_xml.abrir_xml",
           "ordem": 2,
           "kind": "hotkey",
           "keys": ["ctrl", "f6"],
+          "pausa": 0.6,
           "pausa_depois": 1.0,
           "nome": "abrir XML",
-          "obs": "Ctrl+F6 para abrir o XML; espera 1s"
+          "obs": "Ctrl+F6 (0.6s entre Ctrl e F6); espera 1s antes do clique"
         },
         {
           "id": "pegar_xml.clique_info_xml",
@@ -356,7 +359,7 @@
           "kind": "fill_itens",
           "pausa_depois": 0.35,
           "nome": "preencher linhas do XML",
-          "obs": "Por item: NF=1 → Material → Desc → Qtd → Preço → CFOP/AA → IC9 → I49 → C70 → P70 → Plant; no fim Enter×(n_itens+1)"
+          "obs": "Por item: NF=1 → Material → Qtd → Preço → Desc → CFOP/AA → IC9 → I49 → C70 → P70 → Plant; no fim Enter×(n_itens+1)"
         },
         {
           "id": "preencher_itens.verificar_humano",
@@ -705,20 +708,36 @@
           "kind": "user_action",
           "pausa_depois": 0.2,
           "nome": "Verificar NF-e Data",
-          "obs": "Confira Protocol No/Date/Time, Random No e DV.\nOK = continua (fecha e próximo na fila) | Cancelar = para."
+          "obs": "Confira Protocol No/Date/Time, Random No e DV.\nOK = salva e fecha | Parar = encerra (motivo no Status)."
         }
       ]
     },
-    "entre_batches": {
-      "titulo": "Entre batches (fila Excel)",
+    "salvar_e_fechar": {
+      "titulo": "Salvar documento (sucesso)",
       "passos": [
         {
-          "id": "entre_batches.clique_foco",
+          "id": "salvar_e_fechar.clique_salvar",
           "ordem": 1,
           "kind": "click",
-          "pausa_depois": 0.3,
-          "nome": "clique para focar SAP",
-          "obs": "Após Alt+F4: 1 clique na tela do SAP para focar e pegar o próximo batch. NÃO entra no fluxo — só na fila."
+          "pausa_depois": 1.5,
+          "nome": "salvar documento",
+          "obs": "1 clique em Salvar; espera 1.5s antes da balança"
+        },
+        {
+          "id": "salvar_e_fechar.clique_balanca",
+          "ordem": 2,
+          "kind": "click",
+          "pausa_depois": 1.2,
+          "nome": "balança",
+          "obs": "Só no sucesso: 1 clique na balança; espera 1.2s antes do X"
+        },
+        {
+          "id": "salvar_e_fechar.clique_x",
+          "ordem": 3,
+          "kind": "click",
+          "pausa_depois": 2.0,
+          "nome": "X fechar",
+          "obs": "1 clique no X; espera 2s antes da próxima nota"
         }
       ]
     }

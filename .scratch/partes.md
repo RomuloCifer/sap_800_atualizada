@@ -87,9 +87,9 @@ O código calcula a **média do dy** entre linhas e usa isso para todas as linha
 
 1. Clique NF Item (linha N) → escreve sempre **`1`**
 2. Tab → Material (`cProd`)
-3. Tab → Description (`xProd`)
-4. Tab → Quantity (`qCom`)
-5. Tab → Price (`vUnCom`)
+3. Tab → Quantity (`qCom`)
+4. Tab → Price (`vUnCom`)
+5. Tab → Description (`xProd`)
 6. Tab → CFOP SAP: 1º dígito `5→1`, `6→2` + `/AA` (ex.: `5906` → `1906/AA`)
 7. Tab → `IC9` → Tab → `I49` → Tab → `C70` → Tab → `P70`
 8. Clique Plant → `1502` (ou `1318` se recipient sufixo `0017-22`)

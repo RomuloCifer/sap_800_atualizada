@@ -77,6 +77,30 @@ def resolve_xy(passo_id, pontos=None):
     return int(item["x"]), int(item["y"])
 
 
+def garantir_xy(passo_id, pontos=None, passo=None):
+    # type: (str, Optional[Dict[str, dict]], Optional[dict]) -> Tuple[int, int]
+    """
+    Devolve XY do ponto. Se ainda não estiver gravado, pede botão do meio,
+    salva em pontos_local.json e continua (útil no meio do fluxo).
+    """
+    data = pontos if pontos is not None else load_pontos()
+    item = data.get(passo_id)
+    if item and "x" in item and "y" in item:
+        return int(item["x"]), int(item["y"])
+
+    info = dict(passo or {})
+    info.setdefault("id", passo_id)
+    info.setdefault("nome", passo_id)
+    xy = _pedir_ponto(info, 1, 1)
+    if xy is None:
+        raise RuntimeError(
+            "Mapeamento cancelado em '{}'. Rode de novo ou use Mapear.".format(passo_id)
+        )
+    data[passo_id] = {"x": int(xy[0]), "y": int(xy[1])}
+    save_pontos(data)
+    return int(xy[0]), int(xy[1])
+
+
 def _pedir_ponto(passo, indice, total):
     # type: (dict, int, int) -> Optional[Tuple[int, int]]
     """Abre janela e espera BOTÃO DO MEIO (roda) para gravar XY. Esc cancela."""
