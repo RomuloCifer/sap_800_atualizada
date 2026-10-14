@@ -76,6 +76,34 @@ def _clicar(pid, pontos, espera=0.2):
     time.sleep(espera)
 
 
+def _dy_other_base(pontos):
+    # type: (Dict[str, dict]) -> float
+    """Espaçamento vertical entre Other Base 1 → 2 (mesmo passo de linha do grid)."""
+    _x1, y1 = _xy(pontos, IDS_OTHER_BASE[0])
+    _x2, y2 = _xy(pontos, IDS_OTHER_BASE[1])
+    dy = float(y2) - float(y1)
+    if abs(dy) < 1:
+        raise RuntimeError(
+            "Other Base 1 e 2 quase na mesma Y — remapeie other_base_1/2 "
+            "(precisa do desnível de linha para o 2º Stat.TAX)."
+        )
+    return dy
+
+
+def _clicar_stat_tax(pontos, linha_1based=1, espera=0.25):
+    # type: (Dict[str, dict], int, float) -> None
+    """
+    Stat.TAX: linha 1 = ponto mapeado; linha 2+ = mesma X, Y + (n-1)*dy do Other Base.
+    """
+    x, y = _xy(pontos, ID_STAT_TAX)
+    n = int(linha_1based)
+    if n > 1:
+        dy = _dy_other_base(pontos)
+        y = int(round(y + (n - 1) * dy))
+    win_mouse.click(int(x), int(y))
+    time.sleep(espera)
+
+
 def _enter2(pausa=0.4):
     # type: (float) -> None
     teclado.pressionar("enter", vezes=2, pausa=pausa, hold=0.05)
@@ -117,10 +145,11 @@ def _preencher_tax_types(pontos, ano_2026):
     if ano_2026:
         _clicar(ID_TAX_TYPE, pontos, 0.25)
         _escrever("IB2S")
-        _clicar(ID_STAT_TAX, pontos, 0.25)
+        _clicar_stat_tax(pontos, linha_1based=1, espera=0.25)
         _enter2(0.4)
         _escrever("CBS1")
-        _clicar(ID_STAT_TAX, pontos, 0.25)
+        # 2º Stat.TAX: desce 1 linha (mesmo dy do Other Base 1→2)
+        _clicar_stat_tax(pontos, linha_1based=2, espera=0.25)
         _enter2(0.4)
         # Em seguida os 4 códigos (sem novo clique em Tax Type)
         for i, codigo in enumerate(TAXES_BASE):

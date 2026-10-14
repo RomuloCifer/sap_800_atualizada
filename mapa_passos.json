@@ -441,8 +441,8 @@
           "ordem": 8,
           "kind": "map_only",
           "pausa_depois": 0,
-          "nome": "Stat.TAX",
-          "obs": "Mapear sempre (usado em 2026+: IB2S/CBS1). Clique Stat.TAX"
+          "nome": "Stat.TAX (linha 1)",
+          "obs": "Mapear Stat.TAX da 1ª linha (IB2S). O 2º (CBS1) desce 1 linha com o mesmo dy do Other Base 1→2"
         },
         {
           "id": "preencher_taxes.value_ini",

@@ -26,6 +26,7 @@ Parser: `automation/xml_nfe.py`
 | chave | `352511…33194` | `chNFe` |
 
 Itens (`det/prod`): `cProd`, `xProd`, `qCom`, `vUnCom`, `CFOP` — usados em `preencher_itens`.  
+Descrição digitada: `xProd` + `infAdProd` (quando houver), como na DANFE.  
 Plant: `1502` padrão; sufixo recipient `0017-22` → `1318`.
 
 ## Faltando no XML

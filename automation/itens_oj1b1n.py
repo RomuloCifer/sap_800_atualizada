@@ -31,6 +31,36 @@ PLANT_POR_SUFIXO = {
 
 CODIGOS_FIXOS = ("IC9", "I49", "C70", "P70")
 
+# Campo descrição do item no OJ1B1N costuma ter 40 caracteres (SAP corta o resto).
+DESC_MAX_CHARS = 40
+
+
+def truncar_descricao(texto, max_chars=DESC_MAX_CHARS):
+    # type: (str, int) -> str
+    """
+    Evita estourar o campo (40) e vazar digitação para o CFOP.
+    Prioriza o xProd (antes de " / "); se sobrar espaço, inclui o sufixo cortado.
+    Ex.: "... TE / 29-0337353-00000" → "... TE / 29-033735"
+    """
+    t = (texto or "").strip()
+    lim = int(max_chars)
+    if len(t) <= lim:
+        return t
+    sep = " / "
+    if sep in t:
+        base, extra = t.rsplit(sep, 1)
+        base = base.strip()
+        extra = extra.strip()
+        # xProd já estoura sozinho: só ele, cortado
+        if len(base) >= lim:
+            return base[:lim]
+        room = lim - len(base) - len(sep)
+        if room <= 0:
+            return base[:lim]
+        out = "{}{}{}".format(base, sep, extra[:room])
+        return out[:lim]
+    return t[:lim]
+
 
 def cfop_para_sap(cfop):
     # type: (str) -> str
@@ -197,7 +227,8 @@ def executar_preenchimento(contexto, pontos, passo=None):
         _tab()
         _digitar_campo(formatar_preco(preco))
         _tab()
-        _digitar_campo(descricao)
+        # SAP: descrição do item ~40 chars; truncar para não vazar no CFOP
+        _digitar_campo(truncar_descricao(descricao))
         _tab()
         _digitar_campo(cfop_para_sap(cfop))
         for codigo in CODIGOS_FIXOS:

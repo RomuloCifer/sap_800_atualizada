@@ -198,6 +198,21 @@ def _re_tag(texto, nome):
     return (m.group(1).strip() if m else "")
 
 
+def _juntar_descricao_item(x_prod, inf_ad_prod):
+    # type: (str, str) -> str
+    """
+    Descrição como na DANFE: xProd + " / " + infAdProd (quando existir).
+    Ex.: "MOLDE DE INJECAO PLASTICA TE / 29-0337353-00000"
+    """
+    base = (x_prod or "").strip()
+    extra = (inf_ad_prod or "").strip()
+    if not extra:
+        return base
+    if not base:
+        return extra
+    return "{} / {}".format(base, extra)
+
+
 def _re_tag_dentro(texto, bloco, nome):
     # type: (str, str, str) -> str
     """Tag dentro do primeiro bloco <bloco>... (funciona mesmo com XML truncado)."""
@@ -321,6 +336,13 @@ def _parse_nfe_etree(texto):
                 vun = _text(child)
             elif name == "vProd":
                 vprod = _text(child)
+        # infAdProd é irmão de <prod> dentro de <det> (texto extra da DANFE)
+        inf_ad = ""
+        for child in list(det):
+            if _local(child.tag) == "infAdProd":
+                inf_ad = _text(child)
+                break
+        desc = _juntar_descricao_item(desc, inf_ad)
         if cfop:
             cfops.append(cfop)
         itens.append(
@@ -392,7 +414,9 @@ def _parse_nfe_regex(texto):
             ItemNFe(
                 n_item=n_item,
                 codigo=_re_tag(corpo, "cProd"),
-                descricao=_re_tag(corpo, "xProd"),
+                descricao=_juntar_descricao_item(
+                    _re_tag(corpo, "xProd"), _re_tag(corpo, "infAdProd")
+                ),
                 cfop=cfop,
                 quantidade=float(_re_tag(corpo, "qCom") or 0),
                 preco_unitario=float(_re_tag(corpo, "vUnCom") or 0),
