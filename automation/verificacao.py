@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 import tkinter as tk
 from typing import Optional, Tuple
 
@@ -183,3 +184,119 @@ def dialogo_verificacao(parent, titulo, mensagem):
             pass
 
     return bool(escolha["ok"]), escolha.get("motivo")
+
+
+def _dialogo_xml_falhou_impl(parent, mensagem):
+    # type: (Optional[tk.Misc], str) -> bool
+    """True = tentar novamente (pegar_xml); False = sair."""
+    created = False
+    root = parent
+    if root is None:
+        root = tk._default_root
+    if root is None:
+        root = tk.Tk()
+        root.withdraw()
+        created = True
+
+    win = tk.Toplevel(root)
+    win.title("XML não copiado")
+    win.configure(bg="#1e1e1e")
+    win.attributes("-topmost", True)
+    win.resizable(False, False)
+    win.grab_set()
+    escolha = {"retry": False}
+
+    tk.Label(
+        win,
+        text="Ctrl+C do XML falhou",
+        font=("Segoe UI", 14, "bold"),
+        fg="#ffffff",
+        bg="#1e1e1e",
+        wraplength=440,
+        justify="left",
+    ).pack(anchor="w", padx=20, pady=(16, 6))
+    tk.Label(
+        win,
+        text=(mensagem or "").strip()
+        or "O clipboard não trouxe o XML. Ajuste a tela do SAP e tente de novo.",
+        font=("Segoe UI", 10),
+        fg="#ffcc66",
+        bg="#1e1e1e",
+        wraplength=440,
+        justify="left",
+    ).pack(anchor="w", padx=20, pady=(0, 4))
+    tk.Label(
+        win,
+        text="Tentar novamente = recomeça em pegar_xml (sem abrir batch de novo).",
+        font=("Segoe UI", 9),
+        fg="#aaaaaa",
+        bg="#1e1e1e",
+        wraplength=440,
+        justify="left",
+    ).pack(anchor="w", padx=20, pady=(0, 8))
+
+    row = tk.Frame(win, bg="#1e1e1e")
+    row.pack(fill="x", padx=20, pady=16)
+
+    def tentar():
+        escolha["retry"] = True
+        win.destroy()
+
+    def sair():
+        escolha["retry"] = False
+        win.destroy()
+
+    btn = tk.Button(
+        row,
+        text="Tentar novamente",
+        width=18,
+        height=2,
+        font=("Segoe UI", 10, "bold"),
+        command=tentar,
+    )
+    btn.pack(side="left", padx=(0, 10))
+    tk.Button(row, text="Sair", width=12, height=2, command=sair).pack(side="left")
+
+    win.protocol("WM_DELETE_WINDOW", sair)
+    win.bind("<Return>", lambda _e: tentar())
+    win.bind("<Escape>", lambda _e: sair())
+    win.update_idletasks()
+    w, h = win.winfo_reqwidth(), win.winfo_reqheight()
+    sx, sy = win.winfo_screenwidth(), win.winfo_screenheight()
+    win.geometry("+{}+{}".format(max(40, (sx - w) // 2), max(40, (sy - h) // 3)))
+    btn.focus_set()
+    win.wait_window()
+
+    if created:
+        try:
+            root.destroy()
+        except Exception:
+            pass
+    return bool(escolha["retry"])
+
+
+def dialogo_xml_falhou(mensagem, parent=None):
+    # type: (str, Optional[tk.Misc]) -> bool
+    """
+    Diálogo thread-safe: True = tentar de novo a partir de pegar_xml;
+    False = sair (sem gravar Status).
+    """
+    root = parent if parent is not None else tk._default_root
+    # Se a UI principal já existe, agenda no thread do Tk
+    if root is not None and parent is None:
+        try:
+            done = threading.Event()
+            out = {"retry": False}
+
+            def mostrar():
+                try:
+                    out["retry"] = _dialogo_xml_falhou_impl(root, mensagem)
+                finally:
+                    done.set()
+
+            root.after(0, mostrar)
+            done.wait()
+            return bool(out["retry"])
+        except Exception:
+            pass
+    return _dialogo_xml_falhou_impl(parent, mensagem)

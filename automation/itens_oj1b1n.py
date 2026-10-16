@@ -99,11 +99,15 @@ def formatar_quantidade(valor):
 
 def formatar_preco(valor):
     # type: (float) -> str
+    """
+    Preço unitário no OJ1B1N: no máximo 6 casas decimais
+    (ex.: 11.611895). Mais que isso o SAP rejeita.
+    """
     try:
         v = float(valor)
     except (TypeError, ValueError):
         return str(valor or "")
-    texto = "{:.10f}".format(v).rstrip("0").rstrip(".")
+    texto = "{:.6f}".format(v).rstrip("0").rstrip(".")
     return texto if texto else "0"
 
 

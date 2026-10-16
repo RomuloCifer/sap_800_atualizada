@@ -37,7 +37,7 @@ No `preencher_taxes`, mapeie Stat.TAX e Other Base 5/6 **mesmo em notas 2025** (
 - **Esc** para a automação a qualquer momento (mesmo com o SAP em foco).
 - Em pontos estratégicos aparece uma caixa **OK — continuar** / **Parar** (depois dos itens, Taxes e NF-e Data). Em **Parar**, digite o motivo — ele vai na coluna Status e a automação (e a fila) encerra.
 - Se faltar um clique mapeado no meio do fluxo, a automação **pausa e pede o botão do meio** na hora (grava e segue). Não precisa mapear `salvar_e_fechar` antes.
-- Se o **Ctrl+C do XML** falhar (clipboard vazio/inválido), a automação **para** e **não** grava Status (fica `Pendente`).
+- Se o **Ctrl+C do XML** falhar: diálogo **Tentar novamente** (recomeça em `pegar_xml`, sem abrir batch) ou **Sair** (não grava Status; fica `Pendente`).
 
 ---
 

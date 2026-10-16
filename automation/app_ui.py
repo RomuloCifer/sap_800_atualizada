@@ -496,10 +496,11 @@ class App(tk.Tk):
                 from automation.xml_nfe import XmlClipboardFalhou
 
                 if isinstance(exc, XmlClipboardFalhou):
-                    # Ctrl+C XML falhou: para sem gravar Status
-                    msg_xml = "Parado: Ctrl+C do XML falhou.\nStatus no Excel nao foi alterado.\n{}".format(
-                        exc
-                    )
+                    # Usuário escolheu Sair (retry ficou no runner)
+                    msg_xml = (
+                        "Parado: Ctrl+C do XML falhou (Sair).\n"
+                        "Status no Excel nao foi alterado.\n{}"
+                    ).format(exc)
                     self.after(0, lambda m=msg_xml: self._fim_abort(m))
                     return
                 if isinstance(exc, VerificacaoCancelada):

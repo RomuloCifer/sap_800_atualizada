@@ -187,8 +187,8 @@ def cmd_fluxo(args):
         from automation.xml_nfe import XmlClipboardFalhou
 
         if isinstance(exc, XmlClipboardFalhou):
-            # Ctrl+C XML falhou: para sem gravar Status
-            print("PARADO (XML):", exc, file=sys.stderr)
+            # Usuário escolheu Sair no diálogo (retry já tratado no runner)
+            print("PARADO (XML / Sair):", exc, file=sys.stderr)
             return 130
 
         try:

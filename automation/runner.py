@@ -280,9 +280,15 @@ def executar_fluxo(texto=None, contexto=None, pausa_entre=0.35, on_parte=None):
     Novas partes: basta acrescentar o nome em 'fluxo'.
     Retorna o contexto acumulado (XML parseado, etc.).
 
+    Se Ctrl+C do XML falhar: diálogo Tentar novamente (recomeça em pegar_xml)
+    ou Sair (propaga XmlClipboardFalhou, sem gravar Status).
+
     Batch e Issuer Id só via contexto['batch'] e contexto['issuer_id']
     (o parâmetro texto, se vier, só preenche batch se ainda não existir).
     """
+    from automation.xml_nfe import XmlClipboardFalhou
+    from automation.verificacao import dialogo_xml_falhou
+
     win_mouse.ensure_dpi_awareness()
     fluxo = catalog.listar_fluxo()
     ctx = dict(contexto or {})
@@ -294,15 +300,46 @@ def executar_fluxo(texto=None, contexto=None, pausa_entre=0.35, on_parte=None):
 
     # Pontos faltantes são pedidos na hora (botão do meio), não bloqueiam o início.
 
+    idx_pegar_xml = None
+    for i, nome in enumerate(fluxo):
+        if nome == "pegar_xml":
+            idx_pegar_xml = i
+            break
+
     total_passos = 0
-    for nome in fluxo:
+    i = 0
+    while i < len(fluxo):
+        nome = fluxo[i]
         abort.check()
-        if on_parte is not None:
-            on_parte(nome)
-        # Não passa mais `texto` solto — evita colar batch/issuer no campo errado
-        n = executar_parte(nome, texto=None, pausa_entre=pausa_entre, contexto=ctx)
-        total_passos += n
-        _apos_parte(nome, ctx)
+        try:
+            if on_parte is not None:
+                on_parte(nome)
+            # Não passa mais `texto` solto — evita colar batch/issuer no campo errado
+            n = executar_parte(nome, texto=None, pausa_entre=pausa_entre, contexto=ctx)
+            total_passos += n
+            _apos_parte(nome, ctx)
+            i += 1
+        except XmlClipboardFalhou as exc:
+            retry = dialogo_xml_falhou(str(exc))
+            if not retry:
+                raise
+            # Já estamos na tela do XML: recomeça em pegar_xml (pula abrir_batch)
+            if idx_pegar_xml is None:
+                raise
+            # Após o diálogo, foca o SAP de novo (mesmo clique de antes do Ctrl+A)
+            try:
+                pontos = localmap.load_pontos()
+                pid_foco = "pegar_xml.clique_info_xml"
+                x, y = localmap.garantir_xy(
+                    pid_foco,
+                    pontos,
+                    passo={"id": pid_foco, "nome": "foco XML (retry)"},
+                )
+                win_mouse.click(int(x), int(y))
+                abort.sleep(0.5)
+            except Exception:
+                abort.sleep(0.35)
+            i = idx_pegar_xml
 
     ctx["_fluxo"] = fluxo
     ctx["_total_passos"] = total_passos

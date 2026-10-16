@@ -127,7 +127,8 @@ def executar_fila(
             processados.append(item_info)
             break
         except XmlClipboardFalhou as exc:
-            # Ctrl+C XML falhou: para tudo, NÃO grava Status (fica Pendente)
+            # Usuário escolheu Sair no diálogo (retry já foi tentado no runner)
+            # NÃO grava Status (fica Pendente)
             abortado = True
             item_info["status"] = "xml_clipboard"
             item_info["erro"] = str(exc)
