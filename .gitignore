@@ -14,11 +14,14 @@ build/
 pontos_local.json
 tools/coordenadas.txt
 
-# Planilhas locais
+# Planilhas locais (e temporários/lock do Excel/OneDrive)
 *.xlsx
 *.XLSX
 *.xls
 *.XLS
+*.xlsx.tmp
+*.XLSX.tmp
+excel/._*
 
 runs/
 runs/clipboard_xml_ultimo.txt
