@@ -98,7 +98,7 @@ def pedir_motivo_parar(parent=None):
     return out["motivo"] or "parado"
 
 
-def dialogo_verificacao(parent, titulo, mensagem):
+def _dialogo_verificacao_impl(parent, titulo, mensagem):
     # type: (Optional[tk.Misc], str, str) -> Tuple[bool, Optional[str]]
     """
     Retorna (True, None) se OK.
@@ -184,6 +184,34 @@ def dialogo_verificacao(parent, titulo, mensagem):
             pass
 
     return bool(escolha["ok"]), escolha.get("motivo")
+
+
+def dialogo_verificacao(parent, titulo, mensagem):
+    # type: (Optional[tk.Misc], str, str) -> Tuple[bool, Optional[str]]
+    """
+    Diálogo thread-safe: (True, None) = OK; (False, motivo) = Parar.
+    Se a UI principal já existe e parent é None, agenda no thread do Tk.
+    """
+    root = parent if parent is not None else tk._default_root
+    if root is not None and parent is None:
+        try:
+            done = threading.Event()
+            out = {"ok": False, "motivo": None}  # type: dict
+
+            def mostrar():
+                try:
+                    ok, motivo = _dialogo_verificacao_impl(root, titulo, mensagem)
+                    out["ok"] = ok
+                    out["motivo"] = motivo
+                finally:
+                    done.set()
+
+            root.after(0, mostrar)
+            done.wait()
+            return bool(out["ok"]), out.get("motivo")
+        except Exception:
+            pass
+    return _dialogo_verificacao_impl(parent, titulo, mensagem)
 
 
 def _dialogo_xml_falhou_impl(parent, mensagem):

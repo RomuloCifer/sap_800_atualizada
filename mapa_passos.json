@@ -360,7 +360,7 @@
           "kind": "fill_itens",
           "pausa_depois": 0.35,
           "nome": "preencher linhas do XML",
-          "obs": "Por item: NF=1 → Material → Qtd → Preço → Desc → CFOP/AA → IC9 → I49 → C70 → P70 → Plant; no fim Enter×(n_itens+1)"
+          "obs": "Páginas: 1–25 → Enter×(n+1) → diálogo (pessoa desce a grade) → linhas 2–25 (24 itens) → …; por item NF=1→Material→Qtd→Preço→Desc→CFOP→impostos→Plant"
         },
         {
           "id": "preencher_itens.verificar_humano",
@@ -547,7 +547,7 @@
           "fase": "ate_other_base",
           "pausa_depois": 0.3,
           "nome": "Taxes até Other Base",
-          "obs": "Seleção → tax types (ICOF/…) → Value → Other Base 4/6"
+          "obs": "≤25: seleciona sozinho; >25: diálogo (seleção manual). Tax types → espera 5s se 25+ → Value → Other Base 4/6"
         },
         {
           "id": "preencher_taxes.verificar_humano",

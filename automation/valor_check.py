@@ -12,12 +12,14 @@ from typing import Any, Dict, Optional, Tuple
 from automation import abort
 from automation import teclado
 from automation import win_mouse
-from automation.itens_oj1b1n import _xy
+from automation.itens_oj1b1n import ITENS_PRIMEIRA_PAGINA, _xy
 
 ID_VALOR_INI = "preencher_nfe_data.valor_ini"
 ID_VALOR_FIM = "preencher_nfe_data.valor_fim"
 
 TOL_PADRAO = 0.02
+# Mesma guarda das notas grandes em Taxes (Value ainda não apareceu).
+ESPERA_VALOR_NOTA_GRANDE_S = 5.0
 
 
 def parse_valor_flex(texto):
@@ -50,9 +52,27 @@ def _quase_igual(a, b, tol):
     return abs(float(a) - float(b)) <= float(tol) + 1e-9
 
 
-def _copiar_valor_tela(pontos):
-    # type: (Dict[str, dict]) -> Tuple[str, float]
+def _n_itens(ctx):
+    # type: (Dict[str, Any]) -> int
+    itens = ctx.get("itens")
+    if itens:
+        return len(list(itens))
+    nfe = ctx.get("_nfe")
+    if nfe is not None and getattr(nfe, "itens", None):
+        return len(list(nfe.itens))
+    n = ctx.get("n_itens")
+    if n is not None:
+        return int(n)
+    return 0
+
+
+def _copiar_valor_tela(pontos, n_itens=0):
+    # type: (Dict[str, dict], int) -> Tuple[str, float]
     import pyperclip
+
+    if int(n_itens) >= ITENS_PRIMEIRA_PAGINA:
+        abort.check()
+        abort.sleep(ESPERA_VALOR_NOTA_GRANDE_S)
 
     x1, y1 = _xy(pontos, ID_VALOR_INI)
     x2, y2 = _xy(pontos, ID_VALOR_FIM)
@@ -103,7 +123,7 @@ def verificar_valor(contexto, pontos, passo=None):
         tol = float(passo["tol"])
 
     abort.check()
-    bruto, tela = _copiar_valor_tela(pontos)
+    bruto, tela = _copiar_valor_tela(pontos, n_itens=_n_itens(ctx))
     xml_v = _xml_valor(ctx)
     excel_v = _excel_valor(ctx)
 

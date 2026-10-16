@@ -24,6 +24,12 @@ ANCORAS_NF_ITEM = (
 )
 ID_PLANT = "preencher_itens.ancor_plant"
 
+# Grade SAP: 1ª página linhas 1–25; depois do scroll a linha 1 fica com o último item
+# e os novos vão da linha 2 até 25 (24 itens por página).
+ITENS_PRIMEIRA_PAGINA = 25
+ITENS_PAGINA_SEGUINTE = 24
+LINHA_INICIO_APOS_SCROLL = 2
+
 PLANT_PADRAO = "1502"
 PLANT_POR_SUFIXO = {
     "0017-22": "1318",
@@ -183,10 +189,90 @@ def _itens_do_contexto(contexto):
     return []
 
 
+def rolar_grade_itens_para_baixo(pontos=None):
+    # type: (Optional[Dict[str, dict]]) -> None
+    """
+    Pausa e pede para a pessoa descer a grade no SAP.
+    Evita drag automático da barra (travava em notas grandes).
+    """
+    from automation.verificacao import VerificacaoCancelada, dialogo_verificacao
+
+    abort.check()
+    msg = (
+        "Desça a grade de itens no SAP (barra de rolagem) até aparecerem as próximas linhas.\n"
+        "A linha 1 deve ficar com o último item já preenchido; as novas vão da linha 2 em diante.\n\n"
+        "Quando estiver pronta, clique em OK para continuar."
+    )
+    ok, motivo = dialogo_verificacao(None, "Rolar grade de itens", msg)
+    if not ok:
+        raise VerificacaoCancelada(motivo or "parado", passo_id="preencher_itens")
+    abort.sleep(0.2)
+
+
+def _dados_item(item):
+    # type: (Any) -> Tuple[str, str, Any, Any, str]
+    if hasattr(item, "codigo"):
+        return (
+            item.codigo,
+            item.descricao,
+            item.quantidade,
+            item.preco_unitario,
+            item.cfop,
+        )
+    return (
+        item.get("codigo") or item.get("material") or "",
+        item.get("descricao") or "",
+        item.get("quantidade"),
+        item.get("preco_unitario") or item.get("preco"),
+        item.get("cfop") or "",
+    )
+
+
+def _preencher_linha(pontos, dy, plant, linha, item, pausa_linha):
+    # type: (Dict[str, dict], float, str, int, Any, float) -> None
+    material, descricao, qtd, preco, cfop = _dados_item(item)
+    x, y = xy_nf_item(pontos, linha, dy=dy)
+    win_mouse.click(x, y)
+    time.sleep(0.15)
+
+    # Ordem: NF → Material → Qtd → Preço → Desc → CFOP → impostos → Plant
+    _digitar_campo("1")
+    _tab()
+    _digitar_campo(material)
+    _tab()
+    _digitar_campo(formatar_quantidade(qtd))
+    _tab()
+    _digitar_campo(formatar_preco(preco))
+    _tab()
+    _digitar_campo(truncar_descricao(descricao))
+    _tab()
+    _digitar_campo(cfop_para_sap(cfop))
+    for codigo in CODIGOS_FIXOS:
+        _tab()
+        _digitar_campo(codigo)
+
+    px, py = xy_plant(pontos, linha, dy=dy)
+    win_mouse.click(px, py)
+    time.sleep(0.15)
+    _digitar_campo(plant)
+    abort.sleep(pausa_linha)
+
+
+def _enter_apos_pagina(n_itens_pagina):
+    # type: (int) -> None
+    """Enter × (itens da página + 1), como no fluxo atual."""
+    n_enter = int(n_itens_pagina) + 1
+    teclado.pressionar("enter", vezes=n_enter, pausa=0.6, hold=0.05)
+    abort.sleep(0.25)
+
+
 def executar_preenchimento(contexto, pontos, passo=None):
     # type: (Optional[Dict[str, Any]], Dict[str, dict], Optional[dict]) -> int
     """
-    Preenche uma linha por item do XML.
+    Preenche itens do XML em páginas:
+      - 1ª: linhas 1–25
+      - Enter × (25+1) → diálogo (pessoa desce a grade) → linhas 2–25 (24 itens)
+      - repete até acabar
     Retorna quantidade de linhas preenchidas.
     """
     ctx = contexto or {}
@@ -202,53 +288,27 @@ def executar_preenchimento(contexto, pontos, passo=None):
     if passo and passo.get("pausa_depois") is not None:
         pausa_linha = float(passo["pausa_depois"])
 
-    for idx, item in enumerate(itens):
+    idx = 0
+    pagina = 0
+    total = len(itens)
+    while idx < total:
         abort.check()
-        linha = idx + 1  # grade SAP começa na 1ª linha visível
-        if hasattr(item, "codigo"):
-            material = item.codigo
-            descricao = item.descricao
-            qtd = item.quantidade
-            preco = item.preco_unitario
-            cfop = item.cfop
+        if pagina == 0:
+            linha_ini = 1
+            capacidade = ITENS_PRIMEIRA_PAGINA
         else:
-            material = item.get("codigo") or item.get("material") or ""
-            descricao = item.get("descricao") or ""
-            qtd = item.get("quantidade")
-            preco = item.get("preco_unitario") or item.get("preco")
-            cfop = item.get("cfop") or ""
+            rolar_grade_itens_para_baixo(pontos)
+            linha_ini = LINHA_INICIO_APOS_SCROLL
+            capacidade = ITENS_PAGINA_SEGUINTE
 
-        x, y = xy_nf_item(pontos, linha, dy=dy)
-        win_mouse.click(x, y)
-        time.sleep(0.15)
+        chunk = itens[idx : idx + capacidade]
+        for j, item in enumerate(chunk):
+            abort.check()
+            linha = linha_ini + j
+            _preencher_linha(pontos, dy, plant, linha, item, pausa_linha)
 
-        # Ordem nesta máquina: NF → Material → Qtd → Preço → Desc → CFOP → impostos → Plant
-        _digitar_campo("1")
-        _tab()
-        _digitar_campo(material)
-        _tab()
-        _digitar_campo(formatar_quantidade(qtd))
-        _tab()
-        _digitar_campo(formatar_preco(preco))
-        _tab()
-        # SAP: descrição do item ~40 chars; truncar para não vazar no CFOP
-        _digitar_campo(truncar_descricao(descricao))
-        _tab()
-        _digitar_campo(cfop_para_sap(cfop))
-        for codigo in CODIGOS_FIXOS:
-            _tab()
-            _digitar_campo(codigo)
+        _enter_apos_pagina(len(chunk))
+        idx += len(chunk)
+        pagina += 1
 
-        px, py = xy_plant(pontos, linha, dy=dy)
-        win_mouse.click(px, py)
-        time.sleep(0.15)
-        _digitar_campo(plant)
-
-        abort.sleep(pausa_linha)
-
-    # Após todos os itens: Enter (qtd produtos + 1), 0.6s entre cada
-    n_enter = len(itens) + 1
-    teclado.pressionar("enter", vezes=n_enter, pausa=0.6, hold=0.05)
-    abort.sleep(0.25)
-
-    return len(itens)
+    return total

@@ -14,7 +14,14 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 from automation import abort
 from automation import teclado
 from automation import win_mouse
-from automation.itens_oj1b1n import calcular_dy, _xy
+from automation.itens_oj1b1n import (
+    ITENS_PRIMEIRA_PAGINA,
+    calcular_dy,
+    _xy,
+)
+
+# Notas grandes: Value demora a aparecer após tax types / cálculo.
+ESPERA_VALUE_NOTA_GRANDE_S = 5.0
 
 ANCORAS_SEL = (
     ("preencher_taxes.ancor_sel_1", 1),
@@ -130,12 +137,38 @@ def _n_itens(contexto):
     raise RuntimeError("Sem itens no contexto para selecionar em Taxes.")
 
 
+def _pedir_selecao_manual(n_itens):
+    # type: (int) -> None
+    """Notas >25: pessoa marca os itens (e desce a grade) e confirma."""
+    from automation.verificacao import VerificacaoCancelada, dialogo_verificacao
+
+    abort.check()
+    msg = (
+        "Selecione TODOS os {} itens na grade do SAP.\n"
+        "Desça a barra se precisar e continue marcando.\n\n"
+        "Quando todos estiverem selecionados, clique em OK para abrir Taxes."
+    ).format(int(n_itens))
+    ok, motivo = dialogo_verificacao(None, "Selecionar itens (Taxes)", msg)
+    if not ok:
+        raise VerificacaoCancelada(motivo or "parado", passo_id="preencher_taxes")
+    abort.sleep(0.2)
+
+
 def _selecionar_itens(pontos, n_itens):
     # type: (Dict[str, dict], int) -> None
+    """
+    ≤25: clica cada linha automaticamente.
+    >25: diálogo — seleção (e scroll) ficam manuais; OK segue para Taxes.
+    """
+    n = int(n_itens)
+    if n > ITENS_PRIMEIRA_PAGINA:
+        _pedir_selecao_manual(n)
+        return
+
     dy = calcular_dy(pontos, ANCORAS_SEL)
-    for i in range(1, int(n_itens) + 1):
+    for j in range(n):
         abort.check()
-        x, y = xy_sel_item(pontos, i, dy=dy)
+        x, y = xy_sel_item(pontos, j + 1, dy=dy)
         win_mouse.click(x, y)
         abort.sleep(0.18)
 
@@ -163,10 +196,19 @@ def _preencher_tax_types(pontos, ano_2026):
         _enter2(0.4)
 
 
-def _copiar_value(pontos):
-    # type: (Dict[str, dict]) -> str
+def _espera_value_se_nota_grande(n_itens):
+    # type: (int) -> None
+    """Notas 25+: Value demora a calcular — espera antes do drag/Ctrl+C."""
+    if int(n_itens) >= ITENS_PRIMEIRA_PAGINA:
+        abort.check()
+        abort.sleep(ESPERA_VALUE_NOTA_GRANDE_S)
+
+
+def _copiar_value(pontos, n_itens=0):
+    # type: (Dict[str, dict], int) -> str
     import pyperclip
 
+    _espera_value_se_nota_grande(n_itens)
     x1, y1 = _xy(pontos, ID_VALUE_INI)
     x2, y2 = _xy(pontos, ID_VALUE_FIM)
     win_mouse.drag(x1, y1, x2, y2)
@@ -217,7 +259,7 @@ def executar_preenchimento(contexto, pontos, passo=None):
         _preencher_tax_types(pontos, ano_2026)
 
         abort.check()
-        valor = _copiar_value(pontos)
+        valor = _copiar_value(pontos, n_itens=n)
         n_other = 6 if ano_2026 else 4
         _colar_other_base(pontos, valor, n_other)
 

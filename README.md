@@ -24,7 +24,7 @@ Deixe o SAP na tela certa de cada parte antes de mapear. O Mapear só pede **cli
 | 2 | `pegar_xml` | Clique na área do XML (foco antes do Ctrl+A) |
 | 3 | `abrir_oj1b1n` | Campo onde escrever o tcode (`/oj1b1n`) |
 | 4 | `preencher_oj1b1n` | Célula **Nine-Digit No** |
-| 5 | `preencher_itens` | NF Item **meio** das linhas **1, 2, 5, 10, 20** + **Plant** (final da célula, linha 1) |
+| 5 | `preencher_itens` | NF Item **meio** linhas **1, 2, 5, 10, 20** + **Plant** (notas >25: diálogo pede para descer a grade) |
 | 6 | `preencher_taxes` | … → Other Base → Taxes II + CBS **só se** CBS/IBS no Excel → Taxes → **E matemático** |
 | 7 | `preencher_nfe_data` | Valor **início** `<<` e **fim** `>>` → clique **NF-e Data** → clique **Protocol No.** |
 | 8 | `salvar_e_fechar` | **Só sucesso:** Salvar → 3,5s → Alt+F4 → balança → X |
@@ -36,6 +36,10 @@ No `preencher_taxes`, mapeie Stat.TAX e Other Base 5/6 **mesmo em notas 2025** (
 - Feche o Excel na planilha enquanto a automação grava o Status (`A-enviado` / `A-erro` / motivo do Parar). A gravação é atômica (arquivo temp → troca): Ctrl+C no meio do save não deve corromper o `.xlsx`.
 - **Esc** para a automação a qualquer momento (mesmo com o SAP em foco).
 - Em pontos estratégicos aparece uma caixa **OK — continuar** / **Parar** (depois dos itens, Taxes e NF-e Data). Em **Parar**, digite o motivo — ele vai na coluna Status e a automação (e a fila) encerra.
+- Notas com **mais de 25 itens**:
+  - Nos **itens**: após cada Enter da página, pausa para você **descer a grade** e **OK** (continua preenchendo).
+  - Em **Taxes**: não marca as linhas sozinha — diálogo para você **selecionar todos** e **OK**.
+  - Antes de copiar o **Value** (Taxes) e o valor da **verificação** (NF-e Data): espera **5 s** (nota grande demora a calcular).
 - Se faltar um clique mapeado no meio do fluxo, a automação **pausa e pede o botão do meio** na hora (grava e segue). Não precisa mapear `salvar_e_fechar` antes.
 - Se o **Ctrl+C do XML** falhar: diálogo **Tentar novamente** (recomeça em `pegar_xml`, sem abrir batch) ou **Sair** (não grava Status; fica `Pendente`).
 
