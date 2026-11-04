@@ -108,7 +108,7 @@ def cmd_fluxo(args):
     if modo_fila:
         from automation import fila as fila_mod
 
-        print("Modo FILA Excel (todos Status=Pendente)")
+        print("Modo FILA Excel (Status=Pendente relançar + OBS=geisie)")
         print("  Status ok  -> A-enviado (Salvar + Alt+F4 + balança + X)")
         print("  Status err -> A-erro + Alt+F4 + X (sem salvar/balança) e segue")
         print("  Parar      -> motivo no Status + encerra a fila")

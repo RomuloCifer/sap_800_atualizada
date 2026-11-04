@@ -8,17 +8,18 @@ Módulo: `automation/excel_fila.py`
 | Uso | Nome da coluna | Letra atual |
 |-----|----------------|-------------|
 | Filtro da fila | `Status` | **A** |
+| Colaborador | `OBS` | **I** |
 | Batch | `Batch` | **D** |
 | Issuer Sap / Partner ID | `Issuer Id` | **R** |
 | CBS and IBS (Taxes) | `CBS/IBS` | **K** |
 | Valor (comparar com XML) | `Total Value` | **T** |
 
-## Regra da fila
+## Regra da fila (branch `geisie`)
 
-- Pega a **primeira** linha cujo `Status` (trim, case-insensitive) é exatamente **`Pendente`**.
-- Não pega textos tipo `Enviados setembro - pendente revisão`.
-- Padrão: **1 Pendente por vez** (`fluxo --excel`).
-- Fila automática (opcional, `--fila`): sucesso → **`teste_ok`**; erro → **`teste_erro`**. Feche o Excel na planilha ao gravar Status.
+- Pega a **primeira** linha com `Status` = **`Pendente relançar`** **e** `OBS` = **`geisie`** (case-insensitive).
+- Não pega só `Pendente` nem outros textos com “pendente”.
+- Padrão: **1 linha por vez** (`fluxo --excel`).
+- Fila (`--fila`): sucesso → **`A-enviado`**; erro → **`A-erro`**. Feche o Excel ao gravar Status.
 
 ## Como rodar
 
