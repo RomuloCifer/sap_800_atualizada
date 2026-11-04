@@ -756,7 +756,15 @@
           "kind": "click",
           "pausa_depois": 2.0,
           "nome": "X fechar",
-          "obs": "1 clique no X; espera 2s antes da próxima nota"
+          "obs": "1 clique no X (após balança); espera 2s antes da verificação"
+        },
+        {
+          "id": "salvar_e_fechar.verificar_humano",
+          "ordem": 5,
+          "kind": "user_action",
+          "pausa_depois": 0.2,
+          "nome": "Verificar antes do próximo",
+          "obs": "Após Salvar → Alt+F4 → balança → X.\nOK = segue (próxima nota na fila) | Parar = encerra (motivo no Status)."
         }
       ]
     }
