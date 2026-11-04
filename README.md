@@ -55,7 +55,7 @@ No `preencher_taxes`, mapeie Stat.TAX e Other Base 5/6 **mesmo em notas 2025** (
 
 | Opção | O que faz |
 |-------|-----------|
-| **Usar Excel** | Lê a 1ª linha com Status = `Pendente` (Batch + Issuer Id + CBS/IBS…) |
+| **Usar Excel** | Lê a 1ª linha com Status = `Pendente relançar` e OBS = `geisie` |
 | **Fila: um atrás do outro** | Depois de cada nota: salva/fecha no fluxo → grava Status → próximo Pendente |
 | **Remapear tudo** | No Mapear, ignora pontos já gravados daquela parte |
 
@@ -131,7 +131,7 @@ python main.py mapear preencher_itens --remapear-tudo
 
 ## Excel em resumo
 
-1. Status exatamente **`Pendente`** → entra na fila.  
+1. Status **`Pendente relançar`** + OBS **`geisie`** → entra na fila (branch geisie).  
 2. Fluxo ok (valor conferido + todos os OK humanos) → Status **`A-enviado`**.  
 3. Erro técnico / valor divergente → **`A-erro`**.  
 4. **Parar** numa verificação → Status = **texto que você digitar** (e a fila para).  

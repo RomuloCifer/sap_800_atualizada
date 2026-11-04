@@ -1,8 +1,8 @@
 """
-Fila do Excel: primeira linha com Status = Pendente.
+Fila do Excel (branch geisie): Status = Pendente relançar + OBS = geisie.
 
 Colunas por nome do cabeçalho (não pela letra):
-  Status | Batch | Issuer Id | Total Value
+  Status | OBS | Batch | Issuer Id | Total Value
 """
 
 from __future__ import annotations
@@ -17,12 +17,16 @@ from typing import List, Optional, Union
 ROOT = Path(__file__).resolve().parent.parent
 EXCEL_DIR = ROOT / "excel"
 
-STATUS_ALVO = "pendente"
+# Branch geisie: só linhas desta colaboradora com este Status
+STATUS_ALVO = "pendente relancar"  # normalizado (sem acento) — ver _norm_status
+STATUS_ALVO_LABEL = "Pendente relançar"
+OBS_COLABORADOR = "geisie"
 STATUS_OK = "A-enviado"
 STATUS_ERRO = "A-erro"
 
 # Nomes aceitos no cabeçalho (case-insensitive)
 COL_STATUS = ("status",)
+COL_OBS = ("obs",)
 COL_BATCH = ("batch",)
 COL_ISSUER = ("issuer id", "issuer_id", "issuerid")
 COL_TOTAL = ("total value", "total_value", "totalvalue")
@@ -74,6 +78,39 @@ def _cell_str(valor):
     if isinstance(valor, int):
         return str(valor)
     return str(valor).strip()
+
+
+def _sem_acento(texto):
+    # type: (str) -> str
+    """Comparação estável: relançar / relancar."""
+    repl = (
+        ("á", "a"),
+        ("à", "a"),
+        ("ã", "a"),
+        ("â", "a"),
+        ("é", "e"),
+        ("ê", "e"),
+        ("í", "i"),
+        ("ó", "o"),
+        ("ô", "o"),
+        ("õ", "o"),
+        ("ú", "u"),
+        ("ç", "c"),
+    )
+    t = (texto or "").lower()
+    for a, b in repl:
+        t = t.replace(a, b)
+    return t
+
+
+def _norm_status(valor):
+    # type: (object) -> str
+    return " ".join(_sem_acento(_cell_str(valor)).split())
+
+
+def _norm_obs(valor):
+    # type: (object) -> str
+    return _sem_acento(_cell_str(valor)).strip().lower()
 
 
 def _achar_coluna(headers, candidatos):
@@ -179,8 +216,8 @@ def _salvar_workbook_atomico(wb, path):
 def primeira_pendente(caminho=None):
     # type: (Union[str, Path, None]) -> LinhaFila
     """
-    Retorna a primeira linha cujo Status (normalizado) == 'pendente'.
-    Nao pega 'Enviados ... pendente revisao' — so Status exatamente Pendente.
+    Primeira linha com Status='Pendente relançar' e OBS='geisie' (branch geisie).
+    Issuer Id pode vir vazio — pedido na hora de digitar no SAP.
     """
     path = resolver_arquivo_excel(caminho)
     wb = _load_workbook(path, read_only=True, data_only=True)
@@ -194,6 +231,7 @@ def primeira_pendente(caminho=None):
 
         headers = [_norm_header(h) for h in header_row]
         i_status = _achar_coluna(headers, COL_STATUS)
+        i_obs = _achar_coluna(headers, COL_OBS)
         i_batch = _achar_coluna(headers, COL_BATCH)
         i_issuer = _achar_coluna(headers, COL_ISSUER)
         i_total = _achar_coluna(headers, COL_TOTAL)
@@ -202,6 +240,8 @@ def primeira_pendente(caminho=None):
         faltando = []
         if i_status is None:
             faltando.append("Status")
+        if i_obs is None:
+            faltando.append("OBS")
         if i_batch is None:
             faltando.append("Batch")
         if i_issuer is None:
@@ -214,22 +254,22 @@ def primeira_pendente(caminho=None):
                 )
             )
 
+        alvo_obs = _norm_obs(OBS_COLABORADOR)
         for num, row in enumerate(rows, start=2):
             if row is None:
                 continue
             status = _cell_str(row[i_status] if i_status < len(row) else None)
-            if status.lower() != STATUS_ALVO:
+            if _norm_status(status) != STATUS_ALVO:
+                continue
+            obs = _cell_str(row[i_obs] if i_obs < len(row) else None)
+            if _norm_obs(obs) != alvo_obs:
                 continue
             batch = _cell_str(row[i_batch] if i_batch < len(row) else None)
             issuer = _cell_str(row[i_issuer] if i_issuer < len(row) else None)
             if not batch:
                 raise RuntimeError(
-                    "Linha {} Status=Pendente sem Batch em {}.".format(num, path.name)
-                )
-            if not issuer:
-                raise RuntimeError(
-                    "Linha {} Status=Pendente sem Issuer Id em {}.".format(
-                        num, path.name
+                    "Linha {} Status={} sem Batch em {}.".format(
+                        num, STATUS_ALVO_LABEL, path.name
                     )
                 )
             total = None
@@ -251,7 +291,9 @@ def primeira_pendente(caminho=None):
         wb.close()
 
     raise RuntimeError(
-        "Nenhuma linha com Status='Pendente' em {}.".format(path.name)
+        "Nenhuma linha com Status='{}' e OBS='{}' em {}.".format(
+            STATUS_ALVO_LABEL, OBS_COLABORADOR, path.name
+        )
     )
 
 

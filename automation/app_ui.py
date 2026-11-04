@@ -80,7 +80,7 @@ class App(tk.Tk):
         self.excel_var = tk.BooleanVar(value=True)
         tk.Checkbutton(
             self,
-            text="Usar Excel (Status = Pendente)",
+            text="Usar Excel (Pendente relançar + OBS geisie)",
             variable=self.excel_var,
             bg="#f4f4f4",
             activebackground="#f4f4f4",

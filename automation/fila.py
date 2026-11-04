@@ -1,5 +1,5 @@
 """
-Fila Excel: processa todos Status=Pendente em loop.
+Fila Excel (branch geisie): Status=Pendente relançar + OBS=geisie.
 
 Ao sucesso: fluxo já inclui salvar_e_fechar (Salvar + Alt+F4 + balança + X) → Status=A-enviado → próximo.
 Ao erro: Status=A-erro → Alt+F4 + X (sem salvar, sem balança) → próximo.
