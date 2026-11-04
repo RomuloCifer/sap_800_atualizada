@@ -48,6 +48,7 @@ ID_TAXES_II = "preencher_taxes.clique_taxes_ii"
 ID_CBS_IBS = "preencher_taxes.clique_cbs_ibs"
 ID_TAXES_ANTES_MATEMATICO = "preencher_taxes.clique_taxes_antes_matematico"
 ID_E_MATEMATICO = "preencher_taxes.clique_e_matematico"
+ID_SETA_PROXIMO = "preencher_taxes.clique_seta_proximo"
 
 TAXES_BASE = ("ICOF", "ICM0", "IPIS", "IPI0")
 
@@ -236,13 +237,69 @@ def _colar_other_base(pontos, valor, n_celulas):
     _enter2(0.4)
 
 
+def _pedir_ok_item_taxes(indice_1based, total):
+    # type: (int, int) -> None
+    """OK = segue (seta ou fim); Parar = encerra com motivo no Excel."""
+    from automation.verificacao import VerificacaoCancelada, dialogo_verificacao
+
+    abort.check()
+    ultimo = int(indice_1based) >= int(total)
+    msg = (
+        "Item {}/{} — confira tax types e Other Base.\n"
+        "{}".format(
+            int(indice_1based),
+            int(total),
+            "OK = próximo item (seta) | Parar = encerra."
+            if not ultimo
+            else "OK = segue para Taxes II / E matemático | Parar = encerra.",
+        )
+    )
+    ok, motivo = dialogo_verificacao(
+        None, "Verificar Taxes item {}/{}".format(indice_1based, total), msg
+    )
+    if not ok:
+        raise VerificacaoCancelada(motivo or "parado", passo_id="preencher_taxes")
+    abort.sleep(0.2)
+
+
+def _clicar_seta_proximo(pontos):
+    # type: (Dict[str, dict]) -> None
+    """Seta para o próximo item na tela de Taxes (mapear uma vez)."""
+    from automation import localmap
+
+    abort.check()
+    x, y = localmap.garantir_xy(
+        ID_SETA_PROXIMO,
+        pontos,
+        passo={
+            "id": ID_SETA_PROXIMO,
+            "nome": "seta próximo item",
+            "obs": "Clique na seta para o LADO (próximo item)",
+        },
+    )
+    win_mouse.click(int(x), int(y))
+    abort.sleep(0.55)
+
+
+def _preencher_um_item_taxes(pontos, ano_2026, n_itens_nota):
+    # type: (Dict[str, dict], bool, int) -> None
+    """Tax types → Value → Other Base (4 ou 6) para o item atual na tela."""
+    abort.check()
+    _preencher_tax_types(pontos, ano_2026)
+    abort.check()
+    valor = _copiar_value(pontos, n_itens=n_itens_nota)
+    n_other = 6 if ano_2026 else 4
+    _colar_other_base(pontos, valor, n_other)
+
+
 def executar_preenchimento(contexto, pontos, passo=None):
     # type: (Optional[Dict[str, Any]], Dict[str, dict], Optional[dict]) -> int
     """
     fase no passo:
-      - ate_other_base: seleção → tax types → Value → Other Base (para checkpoint humano)
+      - ate_other_base: seleção → Taxes → para CADA item:
+          tax types → Value → Other Base → OK humano → seta (exceto no último)
       - fim: Taxes II+CBS/IBS (só se Excel tiver CBS/IBS) → Taxes → E matemático
-      - tudo (padrão): as duas fases sem pausa humana
+      - tudo (padrão): as duas fases
     """
     ctx = contexto or {}
     fase = str((passo or {}).get("fase") or "tudo").strip().lower()
@@ -255,13 +312,12 @@ def executar_preenchimento(contexto, pontos, passo=None):
         abort.check()
         _clicar(ID_TAXES, pontos, 0.6)
 
-        abort.check()
-        _preencher_tax_types(pontos, ano_2026)
-
-        abort.check()
-        valor = _copiar_value(pontos, n_itens=n)
-        n_other = 6 if ano_2026 else 4
-        _colar_other_base(pontos, valor, n_other)
+        for i in range(n):
+            abort.check()
+            _preencher_um_item_taxes(pontos, ano_2026, n)
+            _pedir_ok_item_taxes(i + 1, n)
+            if i < n - 1:
+                _clicar_seta_proximo(pontos)
 
     if fase in ("tudo", "fim"):
         cbs = _resolver_cbs_ibs(ctx)

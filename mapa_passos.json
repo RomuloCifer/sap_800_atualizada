@@ -235,7 +235,15 @@
           "keys": ["enter"],
           "pausa_depois": 0.5,
           "nome": "enter Partner ID",
-          "obs": "Enter após Partner ID — fim da parte"
+          "obs": "Enter após Partner ID"
+        },
+        {
+          "id": "abrir_oj1b1n.verificar_humano",
+          "ordem": 12,
+          "kind": "user_action",
+          "pausa_depois": 0.2,
+          "nome": "Verificar abertura OJ1B1N",
+          "obs": "Confira X0, Business Place (filial), Partner Function V e Partner ID (Issuer).\nSe estiver errado, corrija no SAP e clique OK.\nOK = continua para preencher | Parar = encerra (motivo no Excel)."
         }
       ]
     },
@@ -541,21 +549,21 @@
           "obs": "Clique no botão E matemático (último passo de Taxes)"
         },
         {
-          "id": "preencher_taxes.preencher_ate_other_base",
+          "id": "preencher_taxes.clique_seta_proximo",
           "ordem": 21,
+          "kind": "map_only",
+          "pausa_depois": 0,
+          "nome": "seta próximo item",
+          "obs": "Clique na seta para o LADO (próximo item) — usada após OK da verificação, entre um item e o outro"
+        },
+        {
+          "id": "preencher_taxes.preencher_ate_other_base",
+          "ordem": 22,
           "kind": "fill_taxes",
           "fase": "ate_other_base",
           "pausa_depois": 0.3,
-          "nome": "Taxes até Other Base",
-          "obs": "≤25: seleciona sozinho; >25: diálogo (seleção manual). Tax types → espera 5s se 25+ → Value → Other Base 4/6"
-        },
-        {
-          "id": "preencher_taxes.verificar_humano",
-          "ordem": 22,
-          "kind": "user_action",
-          "pausa_depois": 0.2,
-          "nome": "Verificar Taxes / Other Base",
-          "obs": "Confira tax types (ICOF ICM0 IPIS IPI0 / 2026+) e os valores nas casas Other Base.\nOK = continua | Cancelar = para."
+          "nome": "Taxes por item até Other Base",
+          "obs": "Seleciona N → Taxes. Para CADA item: tax types → Value → Other Base → verificação humana → seta (exceto no último)."
         },
         {
           "id": "preencher_taxes.preencher_fim",
@@ -564,7 +572,7 @@
           "fase": "fim",
           "pausa_depois": 0.4,
           "nome": "Taxes II → CBS → E matemático",
-          "obs": "Se CBS/IBS vazio no Excel: pula Taxes II. Senão: Taxes II → CBS/IBS. Depois Taxes → E matemático"
+          "obs": "Após todos os itens: se CBS/IBS vazio no Excel pula Taxes II. Senão Taxes II → CBS/IBS. Depois Taxes → E matemático"
         }
       ]
     },

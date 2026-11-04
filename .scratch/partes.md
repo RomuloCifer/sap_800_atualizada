@@ -57,7 +57,8 @@ Navegação por **Tab** (sem cliques nos campos da tela OJ1B1N):
 7. **Tab** → escrever `V` (Partner Function)
 8. **Tab** → Partner ID
 9. Escrever **Issuer Id** → `text_from: issuer_id` (Excel col. R)
-10. **Enter** → fim da parte
+10. **Enter**
+11. **Verificação humana** — confira X0 / Business Place / V / Partner ID; corrija no SAP se precisar → **OK** continua | **Parar** encerra
 
 Ponto a mapear: só `clique_campo_escrever`.
 
@@ -113,17 +114,22 @@ Pontos: 5 âncoras NF Item + 1 Plant.
 6. **Taxes II** + **CBS and IBS**
 7. **Taxes** (antes do E matemático — ponto separado)
 8. **E matemático**
+9. **Seta próximo item** (lado) — entre um item e o outro após OK
 
 ### Automação
 
 1. Clica seleção nos **N** itens preenchidos
 2. Clique Taxes
-3. Se **issue date ≥ 01.01.2026**: Tax Type → `IB2S` → Stat.TAX → Enter×2 → `CBS1` → Stat.TAX → Enter×2 → depois `ICOF`/`ICM0`/`IPIS`/`IPI0` (sem novo clique Tax Type)
-4. Se **2025-**: Tax Type → `ICOF` → Enter×2 → `ICM0` → … → `IPI0`
-5. Drag Value → Ctrl+C → cola Other Base **de baixo pra cima** (2025: 4→1; 2026+: 6→1) → Enter×2
-6. **Verificação humana** (tax types + Other Base)
-7. Taxes II → CBS and IBS (Excel col. **K** `CBS/IBS`; vazio = só clique)
-8. Clique **Taxes** (ponto mapeado à parte) → clique **E matemático** → fim da parte
+3. **Para cada item** (1…N):
+   - 2026+: Tax Type → `IB2S` → Stat.TAX → Enter×2 → `CBS1` → … → `ICOF`/`ICM0`/`IPIS`/`IPI0`
+   - 2025-: Tax Type → `ICOF` → … → `IPI0`
+   - Drag Value → Ctrl+C → cola Other Base **de baixo pra cima** (2025: 4→1; 2026+: 6→1) → Enter×2
+   - **Verificação humana** (OK / Parar)
+   - Se não for o último: clique na **seta próximo item**
+4. Após todos: Taxes II → CBS and IBS (Excel col. **K**; vazio = pula Taxes II)
+5. Clique **Taxes** (ponto separado) → **E matemático**
+
+Mapear também: `preencher_taxes.clique_seta_proximo` (seta para o lado).
 
 ---
 
